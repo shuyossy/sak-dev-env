@@ -1,0 +1,23 @@
+sca:owasp:
+  stage: security
+  image: $IMAGE_MAVEN
+  needs: ['setup:maven']
+  cache:
+    - <<: *cache_maven
+    - <<: *cache_owasp
+  script:
+    - ./mvnw $MAVEN_CLI_OPTS -Pci-mr dependency-check:check
+  artifacts:
+    when: always
+    paths:
+      - target/dependency-check-report.html
+      - target/dependency-check-report.json
+    expire_in: 1 week
+
+sca:trivy-fs:
+  stage: security
+  image:
+    name: $IMAGE_TRIVY
+    entrypoint: ['']
+  script:
+    - trivy fs --severity HIGH,CRITICAL --exit-code 1 --ignore-unfixed .
