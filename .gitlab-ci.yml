@@ -1,0 +1,23 @@
+include:
+  - local: '.gitlab/ci/_defaults.yml'
+  - local: '.gitlab/ci/setup.yml'
+  - local: '.gitlab/ci/quality.yml'
+  - local: '.gitlab/ci/security.yml'
+  - local: '.gitlab/ci/package.yml'
+  - local: '.gitlab/ci/scan.yml'
+  - local: '.gitlab/ci/pages.yml'
+  - local: '.gitlab/ci/release.yml'
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+stages:
+  - setup
+  - quality
+  - security
+  - package
+  - scan
+  - pages
+  - release
