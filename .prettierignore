@@ -7,3 +7,7 @@ package-lock.json
 
 # 計画書・設計書は整形対象外（内容保護）
 docs/plans/
+
+# GitLab CI フラグメント（include で連結される前提で YAML anchor 参照を含むため、
+# 単体では Prettier の内蔵 YAML パーサがエイリアス未解決エラーになる）
+.gitlab/ci/

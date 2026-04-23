@@ -1,0 +1,25 @@
+setup:maven:
+  stage: setup
+  image: $IMAGE_MAVEN
+  cache:
+    - <<: *cache_maven
+    - <<: *cache_lint_tools
+  script:
+    - ./mvnw $MAVEN_CLI_OPTS -N dependency:go-offline
+    - ./mvnw $MAVEN_CLI_OPTS -Plint-setup initialize
+  artifacts:
+    paths:
+      - target/lint-tools/
+    expire_in: 1 day
+
+setup:node:
+  stage: setup
+  image: $IMAGE_NODE
+  cache:
+    - <<: *cache_node
+  script:
+    - npm ci --ignore-scripts
+  artifacts:
+    paths:
+      - node_modules/
+    expire_in: 1 day
