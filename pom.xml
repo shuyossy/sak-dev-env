@@ -138,6 +138,25 @@
 
 		<profile>
 			<id>lint-setup</id>
+			<dependencies>
+				<!-- Checkstyle / PMD は Maven Central に shaded jar が配布されていないため、
+				     profile scope で宣言し、copy-dependencies で transitive 込み配置する -->
+				<dependency>
+					<groupId>com.puppycrawl.tools</groupId>
+					<artifactId>checkstyle</artifactId>
+					<version>${checkstyle.version}</version>
+				</dependency>
+				<dependency>
+					<groupId>net.sourceforge.pmd</groupId>
+					<artifactId>pmd-cli</artifactId>
+					<version>${pmd.version}</version>
+				</dependency>
+				<dependency>
+					<groupId>net.sourceforge.pmd</groupId>
+					<artifactId>pmd-java</artifactId>
+					<version>${pmd.version}</version>
+				</dependency>
+			</dependencies>
 			<build>
 				<plugins>
 					<plugin>
@@ -145,27 +164,13 @@
 						<artifactId>maven-dependency-plugin</artifactId>
 						<version>3.6.1</version>
 						<executions>
+							<!-- google-java-format は all-deps classifier が実在する本物の shaded jar なので単独 copy -->
 							<execution>
-								<id>copy-lint-tools</id>
+								<id>copy-google-java-format</id>
 								<phase>initialize</phase>
 								<goals><goal>copy</goal></goals>
 								<configuration>
 									<artifactItems>
-										<artifactItem>
-											<groupId>com.puppycrawl.tools</groupId>
-											<artifactId>checkstyle</artifactId>
-											<version>${checkstyle.version}</version>
-											<classifier>all</classifier>
-											<outputDirectory>${project.build.directory}/lint-tools</outputDirectory>
-											<destFileName>checkstyle-all.jar</destFileName>
-										</artifactItem>
-										<artifactItem>
-											<groupId>net.sourceforge.pmd</groupId>
-											<artifactId>pmd-dist</artifactId>
-											<version>${pmd.version}</version>
-											<type>zip</type>
-											<outputDirectory>${project.build.directory}/lint-tools</outputDirectory>
-										</artifactItem>
 										<artifactItem>
 											<groupId>com.google.googlejavaformat</groupId>
 											<artifactId>google-java-format</artifactId>
@@ -175,6 +180,17 @@
 											<destFileName>google-java-format.jar</destFileName>
 										</artifactItem>
 									</artifactItems>
+								</configuration>
+							</execution>
+							<!-- Checkstyle と PMD は transitive deps 込みでライブラリ群として配置 -->
+							<execution>
+								<id>copy-lint-lib</id>
+								<phase>initialize</phase>
+								<goals><goal>copy-dependencies</goal></goals>
+								<configuration>
+									<outputDirectory>${project.build.directory}/lint-tools/lib</outputDirectory>
+									<includeScope>runtime</includeScope>
+									<!-- profile で宣言した checkstyle / pmd-cli / pmd-java + transitive を同一ディレクトリへ -->
 								</configuration>
 							</execution>
 						</executions>
