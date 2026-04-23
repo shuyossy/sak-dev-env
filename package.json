@@ -40,5 +40,22 @@
     "@commitlint/config-conventional": "^19.5.0",
     "secretlint": "^9.0.0",
     "@secretlint/secretlint-rule-preset-recommend": "^9.0.0"
+  },
+  "lint-staged": {
+    "*.{js,mjs,cjs}": [
+      "prettier --write",
+      "eslint --fix --max-warnings=0"
+    ],
+    "*.java": [
+      "node scripts/run-spotless-staged.mjs",
+      "node scripts/run-checkstyle.mjs",
+      "node scripts/run-pmd.mjs"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ],
+    "*": [
+      "secretlint"
+    ]
   }
 }
