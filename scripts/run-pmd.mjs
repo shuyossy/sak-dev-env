@@ -16,7 +16,10 @@ const RULESET = join(PROJECT_ROOT, 'rules', 'pmd', 'ruleset-blocking.xml');
 const files = process.argv.slice(2);
 if (files.length === 0) process.exit(0);
 
-if (!existsSync(LIB) || !readdirSync(LIB).some((e) => e.startsWith('pmd-cli-') && e.endsWith('.jar'))) {
+if (
+  !existsSync(LIB) ||
+  !readdirSync(LIB).some((e) => e.startsWith('pmd-cli-') && e.endsWith('.jar'))
+) {
   console.error('[run-pmd] pmd-cli lib not populated. Run: node scripts/setup-lint-tools.mjs');
   process.exit(1);
 }

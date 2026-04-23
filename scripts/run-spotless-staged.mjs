@@ -15,7 +15,9 @@ const files = process.argv.slice(2);
 if (files.length === 0) process.exit(0);
 
 if (!existsSync(JAR)) {
-  console.error('[run-spotless-staged] google-java-format jar not found. Run: node scripts/setup-lint-tools.mjs');
+  console.error(
+    '[run-spotless-staged] google-java-format jar not found. Run: node scripts/setup-lint-tools.mjs',
+  );
   process.exit(1);
 }
 

@@ -16,7 +16,7 @@ export default [
     rules: {
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      'eqeqeq': 'error',
+      eqeqeq: 'error',
       'no-var': 'error',
       'prefer-const': 'error',
     },

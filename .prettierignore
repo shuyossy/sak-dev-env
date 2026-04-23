@@ -1,0 +1,9 @@
+node_modules/
+target/
+src/main/resources/static/js/
+src/main/resources/static/assets/
+.husky/_/
+package-lock.json
+
+# 計画書・設計書は整形対象外（内容保護）
+docs/plans/

@@ -17,8 +17,13 @@ if (files.length === 0) {
   process.exit(0);
 }
 
-if (!existsSync(LIB) || !readdirSync(LIB).some((e) => e.startsWith('checkstyle-') && e.endsWith('.jar'))) {
-  console.error('[run-checkstyle] checkstyle lib not populated. Run: node scripts/setup-lint-tools.mjs');
+if (
+  !existsSync(LIB) ||
+  !readdirSync(LIB).some((e) => e.startsWith('checkstyle-') && e.endsWith('.jar'))
+) {
+  console.error(
+    '[run-checkstyle] checkstyle lib not populated. Run: node scripts/setup-lint-tools.mjs',
+  );
   process.exit(1);
 }
 
