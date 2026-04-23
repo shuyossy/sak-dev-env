@@ -1,0 +1,37 @@
+variables:
+  IMAGE_MAVEN: 'maven:3.9-eclipse-temurin-21'
+  IMAGE_NODE: 'node:22'
+  IMAGE_DOCKER: 'docker:27'
+  IMAGE_DIND: 'docker:27-dind'
+  IMAGE_TRIVY: 'aquasec/trivy:latest'
+  IMAGE_GITLEAKS: 'zricethezav/gitleaks:latest'
+  IMAGE_HADOLINT: 'hadolint/hadolint:latest-alpine'
+  IMAGE_SYFT: 'anchore/syft:latest'
+
+  MAVEN_CLI_OPTS: '-B -Dmaven.repo.local=.m2/repository --no-transfer-progress'
+
+  # 社内プライベートネットワーク環境では Trivy DB を社内ミラーから取得するため、
+  # 以下のコメントアウトを参考に環境固有値を設定してください:
+  # TRIVY_DB_REPOSITORY: "registry.internal.example.com/aquasecurity/trivy-db"
+  # TRIVY_JAVA_DB_REPOSITORY: "registry.internal.example.com/aquasecurity/trivy-java-db"
+  # TRIVY_NO_PROGRESS: "true"
+
+.cache_maven: &cache_maven
+  key: 'maven-$CI_COMMIT_REF_SLUG'
+  paths:
+    - .m2/repository/
+
+.cache_node: &cache_node
+  key: 'node-$CI_COMMIT_REF_SLUG'
+  paths:
+    - node_modules/
+
+.cache_lint_tools: &cache_lint_tools
+  key: 'lint-tools'
+  paths:
+    - target/lint-tools/
+
+.cache_owasp: &cache_owasp
+  key: 'owasp-dc-data'
+  paths:
+    - .owasp-dc-data/
