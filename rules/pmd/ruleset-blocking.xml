@@ -7,7 +7,8 @@
 
   <rule ref="category/java/errorprone.xml/AvoidCatchingThrowable"/>
   <rule ref="category/java/errorprone.xml/EmptyCatchBlock"/>
-  <rule ref="category/java/errorprone.xml/EmptyFinallyBlock"/>
+  <!-- PMD 7.x で EmptyFinallyBlock は EmptyControlStatement に統合（codestyle category） -->
+  <rule ref="category/java/codestyle.xml/EmptyControlStatement"/>
   <rule ref="category/java/errorprone.xml/AvoidBranchingStatementAsLastInLoop"/>
   <rule ref="category/java/errorprone.xml/CloseResource"/>
   <rule ref="category/java/errorprone.xml/DontImportSun"/>
