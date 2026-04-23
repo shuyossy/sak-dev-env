@@ -1,0 +1,85 @@
+lint:format:
+  stage: quality
+  image: $IMAGE_NODE
+  needs: ['setup:node']
+  script:
+    - npm run format:check
+
+lint:eslint:
+  stage: quality
+  image: $IMAGE_NODE
+  needs: ['setup:node']
+  script:
+    - npm run lint
+
+lint:checkstyle:
+  stage: quality
+  image: $IMAGE_MAVEN
+  needs: ['setup:maven']
+  cache:
+    - <<: *cache_maven
+  script:
+    - ./mvnw $MAVEN_CLI_OPTS checkstyle:check
+
+lint:pmd:
+  stage: quality
+  image: $IMAGE_MAVEN
+  needs: ['setup:maven']
+  cache:
+    - <<: *cache_maven
+  script:
+    - ./mvnw $MAVEN_CLI_OPTS pmd:check
+
+lint:spotbugs:
+  stage: quality
+  image: $IMAGE_MAVEN
+  needs: ['setup:maven']
+  cache:
+    - <<: *cache_maven
+  script:
+    - ./mvnw $MAVEN_CLI_OPTS compile spotbugs:check
+
+test:java:
+  stage: quality
+  image: $IMAGE_MAVEN
+  needs: ['setup:maven']
+  cache:
+    - <<: *cache_maven
+  script:
+    - ./mvnw $MAVEN_CLI_OPTS test
+  artifacts:
+    when: always
+    reports:
+      junit: target/surefire-reports/TEST-*.xml
+    paths:
+      - target/jacoco.exec
+    expire_in: 1 week
+
+test:js:
+  stage: quality
+  image: $IMAGE_NODE
+  needs: ['setup:node']
+  script:
+    - npm run test:coverage
+  artifacts:
+    when: always
+    paths:
+      - target/vitest-coverage/
+    expire_in: 1 week
+
+coverage:java:
+  stage: quality
+  image: $IMAGE_MAVEN
+  needs: ['test:java']
+  cache:
+    - <<: *cache_maven
+  script:
+    - ./mvnw $MAVEN_CLI_OPTS -Pci-mr jacoco:report jacoco:check
+
+secret:gitleaks:
+  stage: quality
+  image:
+    name: $IMAGE_GITLEAKS
+    entrypoint: ['']
+  script:
+    - gitleaks detect --source=. --no-git=false --verbose
