@@ -1,0 +1,19 @@
+pages:
+  stage: pages
+  image: $IMAGE_NODE
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  cache:
+    key: 'docs-$CI_COMMIT_REF_SLUG'
+    paths:
+      - docs/node_modules/
+  before_script:
+    - cd docs
+    - npm ci
+  script:
+    - npm run build
+    - mv build ../public
+  artifacts:
+    paths:
+      - public
+    expire_in: 1 week
