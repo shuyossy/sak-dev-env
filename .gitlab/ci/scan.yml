@@ -1,0 +1,18 @@
+lint:hadolint:
+  stage: scan
+  image:
+    name: $IMAGE_HADOLINT
+    entrypoint: ['']
+  script:
+    - hadolint Dockerfile
+
+scan:trivy-image:
+  stage: scan
+  image:
+    name: $IMAGE_TRIVY
+    entrypoint: ['']
+  needs: ['build:image']
+  variables:
+    DOCKER_TLS_CERTDIR: '/certs'
+  script:
+    - trivy image --input image.tar --severity HIGH,CRITICAL --exit-code 1 --ignore-unfixed
