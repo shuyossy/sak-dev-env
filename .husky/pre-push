@@ -1,0 +1,16 @@
+set -e
+
+echo "[pre-push] ESLint (all) ..."
+npm run lint
+
+echo "[pre-push] Prettier check ..."
+npm run format:check
+
+echo "[pre-push] Vitest ..."
+npm test
+
+echo "[pre-push] npm audit ..."
+npm run audit
+
+echo "[pre-push] Maven verify (full static analysis + tests) ..."
+./mvnw -T 1C -Pfast verify
