@@ -227,25 +227,116 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 - Create: `rules/spotbugs/find-sec-bugs-include.xml`
 - Create: `rules/jacoco/coverage-thresholds.xml`
 
-**Step 1: `rules/checkstyle/checkstyle.xml`（フル ruleset）**
+**Step 1: `rules/checkstyle/checkstyle.xml`（フル ruleset、独自定義）**
 
-Google Java Style の公式配布 (https://raw.githubusercontent.com/checkstyle/checkstyle/checkstyle-10.17.0/src/main/resources/google_checks.xml) をそのまま配置する。リポジトリ内に `rules/checkstyle/checkstyle.xml` として保存。取得方法：
+外部 NW 依存をなくすため、`google_checks.xml` を curl で取得する代わりに**独自の自己完結 ruleset を直接書く**。`.editorconfig` の Java 4-space 規約と整合させ、設計書 § 3-2-1 に基づき severity を error/warning に振り分ける。
 
-```bash
-curl -sSL https://raw.githubusercontent.com/checkstyle/checkstyle/checkstyle-10.17.0/src/main/resources/google_checks.xml -o rules/checkstyle/checkstyle.xml
-```
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+  "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+  "https://checkstyle.org/dtds/configuration_1_3.dtd">
+<module name="Checker">
+  <property name="charset" value="UTF-8"/>
+  <property name="fileExtensions" value="java"/>
 
-（社内プライベートネットワークで取得できない場合は、手元で取得して持ち込む。）
+  <module name="FileTabCharacter">
+    <property name="severity" value="error"/>
+    <property name="eachLine" value="true"/>
+  </module>
+  <module name="RegexpSingleline">
+    <property name="severity" value="error"/>
+    <property name="format" value="\s+$"/>
+    <property name="message" value="行末に空白があります"/>
+  </module>
+  <module name="LineLength">
+    <property name="severity" value="warning"/>
+    <property name="max" value="120"/>
+  </module>
 
-ただし以下の 2 箇所を編集：
-- `<property name="severity" value="warning"/>` がある場合はそのまま（CI 側の warning レベル運用に合う）
-- `<module name="SuppressionFilter">` ブロックを追加：
-  ```xml
   <module name="SuppressionFilter">
     <property name="file" value="${config_loc}/suppressions.xml" default="suppressions.xml"/>
     <property name="optional" value="true"/>
   </module>
-  ```
+
+  <module name="TreeWalker">
+    <!-- インポート -->
+    <module name="UnusedImports"><property name="severity" value="error"/></module>
+    <module name="RedundantImport"><property name="severity" value="error"/></module>
+    <module name="AvoidStarImport"><property name="severity" value="error"/></module>
+    <module name="CustomImportOrder">
+      <property name="severity" value="warning"/>
+      <property name="customImportOrderRules" value="STATIC###STANDARD_JAVA_PACKAGE###THIRD_PARTY_PACKAGE"/>
+    </module>
+
+    <!-- 構造的破綻 -->
+    <module name="EmptyBlock">
+      <property name="severity" value="error"/>
+      <property name="option" value="text"/>
+      <property name="tokens" value="LITERAL_CATCH"/>
+    </module>
+    <module name="MissingOverride"><property name="severity" value="error"/></module>
+    <module name="EqualsHashCode"><property name="severity" value="error"/></module>
+    <module name="SimplifyBooleanExpression"><property name="severity" value="error"/></module>
+    <module name="SimplifyBooleanReturn"><property name="severity" value="warning"/></module>
+    <module name="StringLiteralEquality"><property name="severity" value="error"/></module>
+    <module name="ModifierOrder"><property name="severity" value="error"/></module>
+    <module name="RedundantModifier"><property name="severity" value="warning"/></module>
+
+    <!-- 命名規則 -->
+    <module name="TypeName"><property name="severity" value="warning"/></module>
+    <module name="MethodName"><property name="severity" value="warning"/></module>
+    <module name="ParameterName"><property name="severity" value="warning"/></module>
+    <module name="LocalVariableName"><property name="severity" value="warning"/></module>
+    <module name="MemberName"><property name="severity" value="warning"/></module>
+    <module name="ConstantName"><property name="severity" value="warning"/></module>
+    <module name="PackageName">
+      <property name="severity" value="warning"/>
+      <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]*)*$"/>
+    </module>
+
+    <!-- インデント（4-space、.editorconfig と整合） -->
+    <module name="Indentation">
+      <property name="severity" value="error"/>
+      <property name="basicOffset" value="4"/>
+      <property name="braceAdjustment" value="0"/>
+      <property name="caseIndent" value="4"/>
+      <property name="throwsIndent" value="8"/>
+      <property name="lineWrappingIndentation" value="8"/>
+      <property name="arrayInitIndent" value="4"/>
+    </module>
+
+    <!-- 複雑度 -->
+    <module name="CyclomaticComplexity">
+      <property name="severity" value="warning"/>
+      <property name="max" value="15"/>
+    </module>
+    <module name="NestedIfDepth">
+      <property name="severity" value="warning"/>
+      <property name="max" value="4"/>
+    </module>
+
+    <!-- Javadoc -->
+    <module name="MissingJavadocMethod">
+      <property name="severity" value="warning"/>
+      <property name="scope" value="public"/>
+    </module>
+    <module name="JavadocMethod">
+      <property name="severity" value="warning"/>
+      <property name="accessModifiers" value="public"/>
+    </module>
+    <module name="JavadocStyle"><property name="severity" value="warning"/></module>
+
+    <!-- その他のベストプラクティス -->
+    <module name="OneStatementPerLine"><property name="severity" value="warning"/></module>
+    <module name="MultipleVariableDeclarations"><property name="severity" value="warning"/></module>
+    <module name="UpperEll"><property name="severity" value="warning"/></module>
+    <module name="ArrayTypeStyle"><property name="severity" value="warning"/></module>
+    <module name="MissingSwitchDefault"><property name="severity" value="warning"/></module>
+    <module name="FallThrough"><property name="severity" value="warning"/></module>
+  </module>
+</module>
+```
 
 **Step 2: `rules/checkstyle/checkstyle-blocking.xml`（pre-commit 用サブセット）**
 
@@ -446,6 +537,9 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
   <frontend-maven-plugin.version>1.15.1</frontend-maven-plugin.version>
   <node.version>v22.14.0</node.version>
   <npm.version>10.9.0</npm.version>
+  <!-- Node/npm のダウンロード元。社内ミラー利用時は -Dnode.download.root=... 等で上書き -->
+  <node.download.root>https://nodejs.org/dist/</node.download.root>
+  <npm.download.root>https://registry.npmjs.org/npm/-/</npm.download.root>
 </properties>
 ```
 
@@ -639,6 +733,9 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
       <configuration>
         <nodeVersion>${node.version}</nodeVersion>
         <npmVersion>${npm.version}</npmVersion>
+        <!-- 社内ミラー利用時は -Dnode.download.root=... で上書き可能 -->
+        <nodeDownloadRoot>${node.download.root}</nodeDownloadRoot>
+        <npmDownloadRoot>${npm.download.root}</npmDownloadRoot>
       </configuration>
     </execution>
     <execution>
@@ -704,6 +801,13 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
             <failBuildOnCVSS>7</failBuildOnCVSS>
             <dataDirectory>${project.basedir}/.owasp-dc-data</dataDirectory>
             <format>ALL</format>
+            <!--
+              社内プライベートネットワーク環境で利用する場合、NIST NVD への直接アクセスができないため
+              以下のコメントアウトを参考に社内ミラー / プロキシを設定してください:
+              <nvdApiServerUrl>https://nvd-mirror.internal.example.com/api/</nvdApiServerUrl>
+              <nvdDatafeedUrl>https://nvd-mirror.internal.example.com/feed/json/cve/1.1/</nvdDatafeedUrl>
+              <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+            -->
           </configuration>
           <executions>
             <execution>
@@ -2074,6 +2178,12 @@ variables:
 
   MAVEN_CLI_OPTS: "-B -Dmaven.repo.local=.m2/repository --no-transfer-progress"
 
+  # 社内プライベートネットワーク環境では Trivy DB を社内ミラーから取得するため、
+  # 以下のコメントアウトを参考に環境固有値を設定してください:
+  # TRIVY_DB_REPOSITORY: "registry.internal.example.com/aquasecurity/trivy-db"
+  # TRIVY_JAVA_DB_REPOSITORY: "registry.internal.example.com/aquasecurity/trivy-java-db"
+  # TRIVY_NO_PROGRESS: "true"
+
 .cache_maven: &cache_maven
   key: "maven-$CI_COMMIT_REF_SLUG"
   paths:
@@ -2762,9 +2872,17 @@ npm run build    # Vite ビルド（src/main/resources/static/ に出力）
 
 詳細は `docs/plans/2026-04-22-dev-env-setup-design.md` を参照。
 
-### 社内ミラーへの切り替え
+### 社内ミラーへの切り替え一覧
 
-`.gitlab/ci/_defaults.yml` の `IMAGE_*` 変数を社内ミラーのプレフィックス付きに書き換えてください。
+社内プライベートネットワーク環境（`AGENTS.md` の制約条件）でこのボイラープレートを利用する場合、
+以下の 4 箇所が外部インターネット接続を要求します。それぞれ社内ミラー / プロキシを設定してください。
+
+| # | 設定箇所 | 切替対象 | 既定値 |
+|---|---|---|---|
+| 1 | `.gitlab/ci/_defaults.yml` の `IMAGE_*` 変数 | Docker Hub の各種公式イメージ | `maven:3.9-eclipse-temurin-21` 等 |
+| 2 | `.gitlab/ci/_defaults.yml` の `TRIVY_DB_REPOSITORY` / `TRIVY_JAVA_DB_REPOSITORY` | Trivy 脆弱性 DB（`ghcr.io/aquasecurity/trivy-db`） | コメントアウト済（既定は ghcr） |
+| 3 | `pom.xml` の `ci-mr` profile 内 OWASP Dependency-Check 設定 (`<nvdApiServerUrl>` 等) | NIST NVD への直接アクセス | コメントアウト済（既定は NIST 直接） |
+| 4 | `pom.xml` の `<node.download.root>` / `<npm.download.root>` プロパティ | `nodejs.org/dist/` からの Node バイナリ取得 | `https://nodejs.org/dist/` |
 
 ## Docker
 
