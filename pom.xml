@@ -28,11 +28,39 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
+		<checkstyle.version>10.17.0</checkstyle.version>
+		<pmd.version>7.0.0</pmd.version>
+		<spotbugs.version>4.8.6</spotbugs.version>
+		<find-sec-bugs.version>1.13.0</find-sec-bugs.version>
+		<google-java-format.version>1.22.0</google-java-format.version>
+		<jacoco.version>0.8.12</jacoco.version>
+		<owasp-dc.version>10.0.4</owasp-dc.version>
+		<spotless.version>2.43.0</spotless.version>
+		<frontend-maven-plugin.version>1.15.1</frontend-maven-plugin.version>
+		<node.version>v22.14.0</node.version>
+		<npm.version>10.9.0</npm.version>
+		<!-- Node/npm のダウンロード元。社内ミラー利用時は -Dnode.download.root=... 等で上書き -->
+		<node.download.root>https://nodejs.org/dist/</node.download.root>
+		<npm.download.root>https://registry.npmjs.org/npm/-/</npm.download.root>
 	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
 		</dependency>
 
 		<dependency>
