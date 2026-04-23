@@ -1,0 +1,23 @@
+release:image:
+  stage: release
+  image: $IMAGE_DOCKER
+  services:
+    - name: $IMAGE_DIND
+      alias: docker
+  variables:
+    DOCKER_TLS_CERTDIR: '/certs'
+    DOCKER_HOST: 'tcp://docker:2376'
+    DOCKER_CERT_PATH: '/certs/client'
+    DOCKER_TLS_VERIFY: '1'
+  needs: ['build:image', 'scan:trivy-image']
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_REGISTRY != null'
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+  script:
+    - docker load -i image.tar
+    - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:latest
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker push $CI_REGISTRY_IMAGE:latest
