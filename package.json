@@ -1,0 +1,44 @@
+{
+  "name": "sak-dev-env-frontend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0 <23"
+  },
+  "scripts": {
+    "build": "vite build",
+    "build:watch": "vite build --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src/main/frontend",
+    "lint:fix": "eslint src/main/frontend --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "audit": "npm audit --audit-level=high",
+    "lint:java:checkstyle": "node scripts/run-checkstyle.mjs",
+    "lint:java:pmd": "node scripts/run-pmd.mjs",
+    "secretlint": "secretlint --secretlintignore .gitignore '**/*'",
+    "prepare": "husky",
+    "postinstall": "node scripts/setup-lint-tools.mjs"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0",
+    "vitest": "^2.1.0",
+    "@vitest/coverage-v8": "^2.1.0",
+    "jsdom": "^25.0.0",
+    "eslint": "^9.12.0",
+    "@eslint/js": "^9.12.0",
+    "globals": "^15.11.0",
+    "eslint-plugin-security": "^3.0.1",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.3.3",
+    "husky": "^9.1.6",
+    "lint-staged": "^15.2.10",
+    "@commitlint/cli": "^19.5.0",
+    "@commitlint/config-conventional": "^19.5.0",
+    "secretlint": "^9.0.0",
+    "@secretlint/secretlint-rule-preset-recommend": "^9.0.0"
+  }
+}
