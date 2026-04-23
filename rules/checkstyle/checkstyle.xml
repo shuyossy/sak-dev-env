@@ -61,15 +61,15 @@
       <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]*)*$"/>
     </module>
 
-    <!-- インデント（4-space、.editorconfig と整合） -->
+    <!-- インデント（2-space、google-java-format と整合） -->
     <module name="Indentation">
       <property name="severity" value="error"/>
-      <property name="basicOffset" value="4"/>
+      <property name="basicOffset" value="2"/>
       <property name="braceAdjustment" value="0"/>
-      <property name="caseIndent" value="4"/>
-      <property name="throwsIndent" value="8"/>
-      <property name="lineWrappingIndentation" value="8"/>
-      <property name="arrayInitIndent" value="4"/>
+      <property name="caseIndent" value="2"/>
+      <property name="throwsIndent" value="4"/>
+      <property name="lineWrappingIndentation" value="4"/>
+      <property name="arrayInitIndent" value="2"/>
     </module>
 
     <!-- 複雑度 -->
