@@ -1,0 +1,42 @@
+# ビルド成果物
+target/
+node_modules/
+src/main/resources/static/js/
+src/main/resources/static/assets/
+
+# VCS / IDE
+.git/
+.gitignore
+.gitattributes
+.vscode/
+.idea/
+
+# ドキュメント・テスト
+docs/
+README.md
+HELP.md
+PBI.md
+AGENTS.md
+CLAUDE.md
+
+# CI 設定
+.gitlab/
+.gitlab-ci.yml
+.husky/
+
+# ローカル環境固有
+.env
+.env.*
+.DS_Store
+
+# Lint 設定（ビルド不要）
+rules/
+eslint.config.js
+vitest.config.js
+.prettierrc.json
+.prettierignore
+commitlint.config.js
+.secretlintrc.json
+.secretlintignore
+.editorconfig
+.nvmrc
