@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+  <!-- 誤検知の除外をここに追加。ID:2 以降で具体化する想定 -->
+</FindBugsFilter>

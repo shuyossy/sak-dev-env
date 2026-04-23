@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<ruleset name="Project PMD Blocking Ruleset"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <description>Blocking rules run during pre-commit. Only undisputed error-prone patterns.</description>
+
+  <rule ref="category/java/errorprone.xml/AvoidCatchingThrowable"/>
+  <rule ref="category/java/errorprone.xml/EmptyCatchBlock"/>
+  <rule ref="category/java/errorprone.xml/EmptyFinallyBlock"/>
+  <rule ref="category/java/errorprone.xml/AvoidBranchingStatementAsLastInLoop"/>
+  <rule ref="category/java/errorprone.xml/CloseResource"/>
+  <rule ref="category/java/errorprone.xml/DontImportSun"/>
+  <rule ref="category/java/errorprone.xml/UseEqualsToCompareStrings"/>
+</ruleset>

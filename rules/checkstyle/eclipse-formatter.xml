@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<profiles version="22">
+  <profile kind="CodeFormatterProfile" name="google-java-format" version="22">
+    <!-- Google Java Format 相当の設定。詳細は ID:2 以降で調整 -->
+    <setting id="org.eclipse.jdt.core.formatter.tabulation.char" value="space"/>
+    <setting id="org.eclipse.jdt.core.formatter.tabulation.size" value="4"/>
+    <setting id="org.eclipse.jdt.core.formatter.indentation.size" value="2"/>
+  </profile>
+</profiles>
