@@ -1,0 +1,49 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Backend: Build",
+      "type": "shell",
+      "command": "./mvnw clean package",
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "Backend: Test",
+      "type": "shell",
+      "command": "./mvnw test",
+      "group": { "kind": "test", "isDefault": true }
+    },
+    {
+      "label": "Backend: Run (DevTools)",
+      "type": "shell",
+      "command": "./mvnw spring-boot:run"
+    },
+    {
+      "label": "Frontend: Build",
+      "type": "shell",
+      "command": "npm run build"
+    },
+    {
+      "label": "Frontend: Build (Watch)",
+      "type": "shell",
+      "command": "npm run build:watch",
+      "isBackground": true
+    },
+    {
+      "label": "Frontend: Test",
+      "type": "shell",
+      "command": "npm test"
+    },
+    {
+      "label": "Frontend: Test (Watch)",
+      "type": "shell",
+      "command": "npm run test:watch",
+      "isBackground": true
+    },
+    {
+      "label": "Lint: All",
+      "type": "shell",
+      "command": "npm run lint && ./mvnw -DskipTests verify"
+    }
+  ]
+}
