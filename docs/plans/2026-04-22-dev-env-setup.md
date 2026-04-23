@@ -876,6 +876,20 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 
   <profile>
     <id>lint-setup</id>
+    <dependencies>
+      <!-- PMD 7.x は Maven Central に pmd-dist zip 配布なし / shaded jar もないため、
+           pmd-cli と pmd-java を profile scope で宣言し、copy-dependencies で transitive 込みで配置する -->
+      <dependency>
+        <groupId>net.sourceforge.pmd</groupId>
+        <artifactId>pmd-cli</artifactId>
+        <version>${pmd.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.sourceforge.pmd</groupId>
+        <artifactId>pmd-java</artifactId>
+        <version>${pmd.version}</version>
+      </dependency>
+    </dependencies>
     <build>
       <plugins>
         <plugin>
@@ -883,26 +897,21 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
           <artifactId>maven-dependency-plugin</artifactId>
           <version>3.6.1</version>
           <executions>
+            <!-- Checkstyle と google-java-format は単一 shaded jar なので copy goal -->
             <execution>
-              <id>copy-lint-tools</id>
+              <id>copy-single-jars</id>
               <phase>initialize</phase>
               <goals><goal>copy</goal></goals>
               <configuration>
                 <artifactItems>
                   <artifactItem>
+                    <!-- 10.x 以降 checkstyle main jar は shaded + Main-Class 付きで直接実行可能。
+                         classifier=all は廃止されているので指定しない -->
                     <groupId>com.puppycrawl.tools</groupId>
                     <artifactId>checkstyle</artifactId>
                     <version>${checkstyle.version}</version>
-                    <classifier>all</classifier>
                     <outputDirectory>${project.build.directory}/lint-tools</outputDirectory>
                     <destFileName>checkstyle-all.jar</destFileName>
-                  </artifactItem>
-                  <artifactItem>
-                    <groupId>net.sourceforge.pmd</groupId>
-                    <artifactId>pmd-dist</artifactId>
-                    <version>${pmd.version}</version>
-                    <type>zip</type>
-                    <outputDirectory>${project.build.directory}/lint-tools</outputDirectory>
                   </artifactItem>
                   <artifactItem>
                     <groupId>com.google.googlejavaformat</groupId>
@@ -915,6 +924,17 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
                 </artifactItems>
               </configuration>
             </execution>
+            <!-- PMD CLI は transitive deps を含むライブラリ群として配置 -->
+            <execution>
+              <id>copy-pmd-lib</id>
+              <phase>initialize</phase>
+              <goals><goal>copy-dependencies</goal></goals>
+              <configuration>
+                <outputDirectory>${project.build.directory}/lint-tools/pmd-lib</outputDirectory>
+                <includeScope>runtime</includeScope>
+                <!-- profile scope で宣言した pmd-cli / pmd-java + transitive のみ対象 -->
+              </configuration>
+            </execution>
           </executions>
         </plugin>
       </plugins>
@@ -925,10 +945,13 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 
 **Step 2: lint-setup 動作確認**
 
-Run: `./mvnw -Plint-setup initialize -q && ls target/lint-tools/`
-Expected: `checkstyle-all.jar`, `google-java-format.jar`, `pmd-bin-7.0.0.zip`（または展開済み `pmd-bin-7.0.0/`）が存在。
+Run: `./mvnw -Plint-setup initialize -q && ls target/lint-tools/ target/lint-tools/pmd-lib/ | head -20`
+Expected: 以下が存在すること：
+- `target/lint-tools/checkstyle-all.jar`（single jar、shaded）
+- `target/lint-tools/google-java-format.jar`（single jar、classifier=all-deps）
+- `target/lint-tools/pmd-lib/pmd-cli-<version>.jar`、`pmd-java-<version>.jar`、`pmd-core-<version>.jar`、他 transitive deps 多数
 
-zip がそのまま置かれる場合、`scripts/setup-lint-tools.mjs` 側で展開することにする（Task 14 で実装）。
+PMD CLI は `java -cp "target/lint-tools/pmd-lib/*" net.sourceforge.pmd.cli.PmdCli check ...` 形式で起動する（Phase 5 Task 16 で `run-pmd.mjs` が実装）。
 
 **Step 3: コミット**
 
@@ -1153,32 +1176,22 @@ import { spawnSync } from 'node:child_process';
 const PROJECT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const LINT_TOOLS_DIR = join(PROJECT_ROOT, 'target', 'lint-tools');
 
+const PMD_LIB = join(LINT_TOOLS_DIR, 'pmd-lib');
+
 function hasAll() {
   if (!existsSync(LINT_TOOLS_DIR)) return false;
   const entries = readdirSync(LINT_TOOLS_DIR);
-  const checkstyle = entries.some((e) => e === 'checkstyle-all.jar');
-  const gjf = entries.some((e) => e === 'google-java-format.jar');
-  const pmd = entries.some((e) => e.startsWith('pmd-bin-') && !e.endsWith('.zip'));
-  return checkstyle && gjf && pmd;
+  const checkstyle = entries.includes('checkstyle-all.jar');
+  const gjf = entries.includes('google-java-format.jar');
+  const pmdReady =
+    existsSync(PMD_LIB) &&
+    readdirSync(PMD_LIB).some((e) => e.startsWith('pmd-cli-') && e.endsWith('.jar'));
+  return checkstyle && gjf && pmdReady;
 }
 
 function resolveMaven() {
   const wrapper = process.platform === 'win32' ? 'mvnw.cmd' : 'mvnw';
   return join(PROJECT_ROOT, wrapper);
-}
-
-function extractPmdZip() {
-  // pom.xml の maven-dependency-plugin は zip をそのまま置く。展開まで面倒を見る。
-  if (!existsSync(LINT_TOOLS_DIR)) return;
-  const zips = readdirSync(LINT_TOOLS_DIR).filter((e) => e.startsWith('pmd-bin-') && e.endsWith('.zip'));
-  for (const zip of zips) {
-    const zipPath = join(LINT_TOOLS_DIR, zip);
-    const result = spawnSync('unzip', ['-oq', zipPath, '-d', LINT_TOOLS_DIR], { stdio: 'inherit' });
-    if (result.status !== 0) {
-      console.error(`[setup-lint-tools] unzip failed for ${zipPath}`);
-      process.exit(1);
-    }
-  }
 }
 
 function runMavenLintSetup() {
@@ -1192,7 +1205,6 @@ function runMavenLintSetup() {
     console.error('[setup-lint-tools] ./mvnw -Plint-setup initialize failed.');
     process.exit(result.status ?? 1);
   }
-  extractPmdZip();
 }
 
 if (hasAll()) {
@@ -1294,6 +1306,8 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ```js
 #!/usr/bin/env node
 // lint-staged から呼ばれ、変更 Java ファイルに対して PMD (blocking ruleset) を実行。
+// Maven Central には PMD 7.x の zip 配布がないため、pmd-cli + 依存 jar 群を
+// `target/lint-tools/pmd-lib/` に配置して classpath で起動する（pom.xml lint-setup profile 参照）。
 
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -1301,29 +1315,36 @@ import { spawnSync } from 'node:child_process';
 import { readdirSync, existsSync } from 'node:fs';
 
 const PROJECT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const LINT_TOOLS = join(PROJECT_ROOT, 'target', 'lint-tools');
+const PMD_LIB = join(PROJECT_ROOT, 'target', 'lint-tools', 'pmd-lib');
 const RULESET = join(PROJECT_ROOT, 'rules', 'pmd', 'ruleset-blocking.xml');
-
-function resolvePmdCli() {
-  if (!existsSync(LINT_TOOLS)) return null;
-  const pmdDir = readdirSync(LINT_TOOLS).find((e) => e.startsWith('pmd-bin-') && !e.endsWith('.zip'));
-  if (!pmdDir) return null;
-  const binName = process.platform === 'win32' ? 'pmd.bat' : 'pmd';
-  return join(LINT_TOOLS, pmdDir, 'bin', binName);
-}
 
 const files = process.argv.slice(2);
 if (files.length === 0) process.exit(0);
 
-const pmdCli = resolvePmdCli();
-if (!pmdCli) {
-  console.error('[run-pmd] pmd CLI not found. Run: node scripts/setup-lint-tools.mjs');
+if (!existsSync(PMD_LIB) || readdirSync(PMD_LIB).length === 0) {
+  console.error('[run-pmd] pmd-lib not populated. Run: node scripts/setup-lint-tools.mjs');
   process.exit(1);
 }
 
-// PMD 7 CLI: `pmd check -R <ruleset> -d <files...>`
-const args = ['check', '-R', RULESET, '--no-progress', '-f', 'text', '-d', ...files];
-const result = spawnSync(pmdCli, args, { stdio: 'inherit' });
+// Windows と Unix で classpath 区切り文字が違う
+const sep = process.platform === 'win32' ? ';' : ':';
+const classpath = `${PMD_LIB}${sep === ':' ? '/*' : '\\*'}`;
+
+// PMD 7 CLI: `net.sourceforge.pmd.cli.PmdCli check -R <ruleset> --no-progress -f text -d <files...>`
+const args = [
+  '-cp',
+  classpath,
+  'net.sourceforge.pmd.cli.PmdCli',
+  'check',
+  '-R',
+  RULESET,
+  '--no-progress',
+  '-f',
+  'text',
+  '-d',
+  ...files,
+];
+const result = spawnSync('java', args, { stdio: 'inherit' });
 process.exit(result.status ?? 1);
 ```
 
