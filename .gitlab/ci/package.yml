@@ -1,0 +1,35 @@
+build:jar:
+  stage: package
+  image: $IMAGE_MAVEN
+  needs: ['test:java', 'test:js']
+  cache:
+    - <<: *cache_maven
+    - <<: *cache_node
+  script:
+    - ./mvnw $MAVEN_CLI_OPTS -DskipTests package
+  artifacts:
+    paths:
+      - target/*.jar
+    expire_in: 1 week
+
+build:image:
+  stage: package
+  image: $IMAGE_DOCKER
+  services:
+    - name: $IMAGE_DIND
+      alias: docker
+  variables:
+    DOCKER_TLS_CERTDIR: '/certs'
+    DOCKER_HOST: 'tcp://docker:2376'
+    DOCKER_CERT_PATH: '/certs/client'
+    DOCKER_TLS_VERIFY: '1'
+  needs: ['build:jar']
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
+    - docker save $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA -o image.tar
+    - docker run --rm -v "$PWD:/work" -w /work $IMAGE_SYFT packages docker-archive:image.tar -o cyclonedx-json > sbom.cdx.json
+  artifacts:
+    paths:
+      - image.tar
+      - sbom.cdx.json
+    expire_in: 1 week
