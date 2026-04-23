@@ -43,6 +43,147 @@
 		<node.download.root>https://nodejs.org/dist/</node.download.root>
 		<npm.download.root>https://registry.npmjs.org/npm/-/</npm.download.root>
 	</properties>
+
+	<profiles>
+		<profile>
+			<id>fast</id>
+			<activation><activeByDefault>true</activeByDefault></activation>
+			<!-- 既定動作。OWASP DC は動かさない -->
+		</profile>
+
+		<profile>
+			<id>ci-mr</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.owasp</groupId>
+						<artifactId>dependency-check-maven</artifactId>
+						<version>${owasp-dc.version}</version>
+						<configuration>
+							<failBuildOnCVSS>7</failBuildOnCVSS>
+							<dataDirectory>${project.basedir}/.owasp-dc-data</dataDirectory>
+							<format>ALL</format>
+							<!--
+							  社内プライベートネットワーク環境で利用する場合、NIST NVD への直接アクセスができないため
+							  以下のコメントアウトを参考に社内ミラー / プロキシを設定してください:
+							  <nvdApiServerUrl>https://nvd-mirror.internal.example.com/api/</nvdApiServerUrl>
+							  <nvdDatafeedUrl>https://nvd-mirror.internal.example.com/feed/json/cve/1.1/</nvdDatafeedUrl>
+							  <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+							-->
+						</configuration>
+						<executions>
+							<execution>
+								<phase>verify</phase>
+								<goals><goal>check</goal></goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.jacoco</groupId>
+						<artifactId>jacoco-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>check</id>
+								<phase>verify</phase>
+								<goals><goal>check</goal></goals>
+								<configuration>
+									<rules>
+										<rule>
+											<element>BUNDLE</element>
+											<limits>
+												<limit>
+													<counter>LINE</counter>
+													<value>COVEREDRATIO</value>
+													<minimum>0.60</minimum>
+												</limit>
+												<limit>
+													<counter>BRANCH</counter>
+													<value>COVEREDRATIO</value>
+													<minimum>0.50</minimum>
+												</limit>
+											</limits>
+										</rule>
+									</rules>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+		<profile>
+			<id>ci-main</id>
+			<!-- ci-mr と同じ振る舞いを継承。将来のリリース固有ジョブ用に予約 -->
+		</profile>
+
+		<profile>
+			<id>skip-frontend</id>
+			<properties>
+				<skip.npm>true</skip.npm>
+			</properties>
+			<!-- frontend-maven-plugin 側に skip フラグを配ってスキップ -->
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>com.github.eirslett</groupId>
+						<artifactId>frontend-maven-plugin</artifactId>
+						<configuration>
+							<skip>${skip.npm}</skip>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+		<profile>
+			<id>lint-setup</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-dependency-plugin</artifactId>
+						<version>3.6.1</version>
+						<executions>
+							<execution>
+								<id>copy-lint-tools</id>
+								<phase>initialize</phase>
+								<goals><goal>copy</goal></goals>
+								<configuration>
+									<artifactItems>
+										<artifactItem>
+											<groupId>com.puppycrawl.tools</groupId>
+											<artifactId>checkstyle</artifactId>
+											<version>${checkstyle.version}</version>
+											<classifier>all</classifier>
+											<outputDirectory>${project.build.directory}/lint-tools</outputDirectory>
+											<destFileName>checkstyle-all.jar</destFileName>
+										</artifactItem>
+										<artifactItem>
+											<groupId>net.sourceforge.pmd</groupId>
+											<artifactId>pmd-dist</artifactId>
+											<version>${pmd.version}</version>
+											<type>zip</type>
+											<outputDirectory>${project.build.directory}/lint-tools</outputDirectory>
+										</artifactItem>
+										<artifactItem>
+											<groupId>com.google.googlejavaformat</groupId>
+											<artifactId>google-java-format</artifactId>
+											<version>${google-java-format.version}</version>
+											<classifier>all-deps</classifier>
+											<outputDirectory>${project.build.directory}/lint-tools</outputDirectory>
+											<destFileName>google-java-format.jar</destFileName>
+										</artifactItem>
+									</artifactItems>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
