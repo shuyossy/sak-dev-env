@@ -269,7 +269,13 @@
 				</dependencies>
 				<configuration>
 					<configLocation>rules/checkstyle/checkstyle.xml</configLocation>
-					<suppressionsLocation>rules/checkstyle/suppressions.xml</suppressionsLocation>
+					<!--
+						google_checks.xml が参照する以下の独自プロパティに suppressions ファイルを渡す。
+						maven-checkstyle-plugin 標準の <suppressionsLocation> は checkstyle.suppressions.file
+						を渡すが、google_checks.xml は org.checkstyle.google.suppressionfilter.config
+						プロパティを読むため一致しない。
+					-->
+					<propertyExpansion>org.checkstyle.google.suppressionfilter.config=rules/checkstyle/suppressions.xml</propertyExpansion>
 					<consoleOutput>true</consoleOutput>
 					<failsOnError>true</failsOnError>
 					<linkXRef>false</linkXRef>

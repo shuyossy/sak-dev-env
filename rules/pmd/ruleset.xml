@@ -3,26 +3,40 @@
          xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
          xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <description>Full PMD ruleset for CI use.</description>
+
+  <description>
+    PMD 7.x の標準カテゴリをそのまま参照するフル ruleset。
+    独自定義・除外は原則置かない（標準準拠）。
+  </description>
+
+  <!--
+    ========================================================================
+    特定ルールを除外したい場合のカスタマイズ方法
+    ========================================================================
+    1) 対象ルールの <rule ref="..."/> を閉じタグ付きに展開する
+    2) 内側に <exclude name="XXX"/> を列挙する
+    3) コミットメッセージまたはコード内コメントで除外理由を残す
+
+    例: Spring Boot の @SpringBootApplication クラスを UseUtilityClass の
+       対象外にしたいとき（※通常は @SuppressWarnings で個別対応を推奨）:
+
+       <rule ref="category/java/design.xml">
+         <exclude name="UseUtilityClass"/>
+       </rule>
+
+    個別ソースでの抑制は以下のいずれかで行える:
+      - @SuppressWarnings("PMD.<RuleName>") アノテーション
+      - 行末コメント // NOPMD - <理由>
+    ファイル横断の抑制が必要になったら本 ruleset を上記パターンで編集する。
+    ========================================================================
+  -->
 
   <rule ref="category/java/bestpractices.xml"/>
+  <rule ref="category/java/codestyle.xml"/>
+  <rule ref="category/java/design.xml"/>
+  <rule ref="category/java/documentation.xml"/>
   <rule ref="category/java/errorprone.xml"/>
   <rule ref="category/java/multithreading.xml"/>
   <rule ref="category/java/performance.xml"/>
   <rule ref="category/java/security.xml"/>
-  <rule ref="category/java/codestyle.xml">
-    <exclude name="OnlyOneReturn"/>
-    <exclude name="LocalVariableCouldBeFinal"/>
-    <exclude name="MethodArgumentCouldBeFinal"/>
-    <exclude name="CommentDefaultAccessModifier"/>
-  </rule>
-  <rule ref="category/java/design.xml">
-    <exclude name="LawOfDemeter"/>
-    <exclude name="LoosePackageCoupling"/>
-    <!-- Spring Boot の @SpringBootApplication クラスは utility class ではない -->
-    <exclude name="UseUtilityClass"/>
-  </rule>
-  <rule ref="category/java/documentation.xml">
-    <exclude name="CommentRequired"/>
-  </rule>
 </ruleset>
