@@ -267,23 +267,48 @@
 						<version>${checkstyle.version}</version>
 					</dependency>
 				</dependencies>
-				<configuration>
-					<configLocation>rules/checkstyle/checkstyle.xml</configLocation>
-					<!--
-						google_checks.xml が参照する以下の独自プロパティに suppressions ファイルを渡す。
-						maven-checkstyle-plugin 標準の <suppressionsLocation> は checkstyle.suppressions.file
-						を渡すが、google_checks.xml は org.checkstyle.google.suppressionfilter.config
-						プロパティを読むため一致しない。
-					-->
-					<propertyExpansion>org.checkstyle.google.suppressionfilter.config=rules/checkstyle/suppressions.xml</propertyExpansion>
-					<consoleOutput>true</consoleOutput>
-					<failsOnError>true</failsOnError>
-					<linkXRef>false</linkXRef>
-				</configuration>
+				<!--
+					Checkstyle は 2 本立ての execution で動作させる。
+					* checkstyle-advisory: google_checks.xml 逐語コピーの全規則を "soft gate" として実行。
+					  Checker 直下で severity="warning" が宣言されているため、plugin 既定の
+					  violationSeverity="error" との組合せで違反は情報表示のみ（build を落とさない）。
+					  Google 本家が google_checks を助言レベルに位置付けている設計を踏襲している。
+					* checkstyle-blocking: プロジェクト独自の致命パターン集合を "hard gate" として実行。
+					  Checker 直下で severity="error" が宣言されており違反で build が必ず失敗する。
+					  これは pre-commit (scripts/run-checkstyle.mjs 経由) で差分を対象に走らせるのと同一の
+					  ruleset を、pre-push / CI でも全体対象で走らせることで、git の no-verify バイパスや
+					  差分以外の箇所への混入に対しても確実に hard gate が機能することを保証する。
+					詳細は rules/README.md を参照。
+				-->
 				<executions>
 					<execution>
+						<id>checkstyle-advisory</id>
 						<phase>verify</phase>
 						<goals><goal>check</goal></goals>
+						<configuration>
+							<configLocation>rules/checkstyle/checkstyle-advisory.xml</configLocation>
+							<!--
+								google_checks.xml が参照する以下の独自プロパティに suppressions ファイルを渡す。
+								maven-checkstyle-plugin 標準の <suppressionsLocation> は checkstyle.suppressions.file
+								を渡すが、google_checks.xml は org.checkstyle.google.suppressionfilter.config
+								プロパティを読むため一致しない。
+							-->
+							<propertyExpansion>org.checkstyle.google.suppressionfilter.config=rules/checkstyle/suppressions.xml</propertyExpansion>
+							<consoleOutput>true</consoleOutput>
+							<failsOnError>true</failsOnError>
+							<linkXRef>false</linkXRef>
+						</configuration>
+					</execution>
+					<execution>
+						<id>checkstyle-blocking</id>
+						<phase>verify</phase>
+						<goals><goal>check</goal></goals>
+						<configuration>
+							<configLocation>rules/checkstyle/checkstyle-blocking.xml</configLocation>
+							<consoleOutput>true</consoleOutput>
+							<failsOnError>true</failsOnError>
+							<linkXRef>false</linkXRef>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>

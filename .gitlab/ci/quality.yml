@@ -18,8 +18,12 @@ lint:checkstyle:
   needs: ['setup:maven']
   cache:
     - <<: *cache_maven
+  # Checkstyle は pom.xml に advisory (soft gate / google_checks) と blocking (hard gate)
+  # の 2 つの execution を定義している。`checkstyle:check` を引数なしで呼ぶと plugin 既定
+  # の sun_checks で走ってしまうため、@execution-id 構文で両方を明示的に起動する。
+  # advisory は severity=warning で情報表示のみ、blocking は severity=error で違反時 fail。
   script:
-    - ./mvnw $MAVEN_CLI_OPTS checkstyle:check
+    - ./mvnw $MAVEN_CLI_OPTS checkstyle:check@checkstyle-advisory checkstyle:check@checkstyle-blocking
 
 lint:pmd:
   stage: quality

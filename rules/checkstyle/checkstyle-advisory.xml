@@ -4,18 +4,36 @@
           "https://checkstyle.org/dtds/configuration_1_3.dtd">
 
 <!--
+    ============================================================================
+    役割: Checkstyle "soft gate" (助言レベル / 情報表示のみ)
+    ============================================================================
     本ファイルは checkstyle 10.17.0 に同梱される google_checks.xml の逐語コピーである。
+    Checker ルート直下で severity="warning" が宣言されているため、
+    maven-checkstyle-plugin 既定の violationSeverity="error" と組み合わさり、
+    ここの違反は Maven の build を落とさない (= 情報表示のみ)。
+
+    これは Google 本家が google_checks を助言レベルと位置付けている設計を
+    本プロジェクトでも踏襲するもの。スタイル微調整による過剰なフリクションを避けつつ、
+    Google Java Style に寄せる気付きを開発者に提供する狙い。
+
+    対になる hard gate は同フォルダの rules/checkstyle/checkstyle-blocking.xml。
+    blocking 側は severity="error" で pre-commit / pre-push / CI のすべてで違反を
+    build / commit 失敗にする。advisory (本ファイル) は blocking と重複しない助言を
+    提供する、という役割分担になっている (詳細: rules/README.md)。
+
     出典: https://github.com/checkstyle/checkstyle/blob/checkstyle-10.17.0/src/main/resources/google_checks.xml
     ライセンス: Apache License 2.0
-    意図: Spotless (google-java-format 1.22.0) と同じ Google Java Style Guide に沿った検査を行い、
-         独自定義による保守負荷を避ける。プロジェクト固有の「必ず止めたい」ルールは
-         rules/checkstyle/checkstyle-blocking.xml (pre-commit 用) で別管理している。
-    更新手順: checkstyle のバージョン更新時は、同じタグの google_checks.xml を checkstyle-all.jar
-             または GitHub から取得し、以下の "本家ヘッダ以降" を丸ごと上書きする。
+
+    更新手順: checkstyle のバージョン更新時は、同じタグの google_checks.xml を
+            checkstyle-all.jar または GitHub から取得し、以下の "本家ヘッダ以降" を
+            丸ごと上書きする。独自改変はしない方針 (逐語コピーを維持)。
+
     抑制ファイル: google_checks.xml 内の SuppressionFilter は
-                 ${org.checkstyle.google.suppressionfilter.config} プロパティを参照するため、
-                 pom.xml 側の maven-checkstyle-plugin で <propertyExpansion> により
-                 rules/checkstyle/suppressions.xml を渡している。
+                ${org.checkstyle.google.suppressionfilter.config} プロパティを
+                参照するため、pom.xml 側の maven-checkstyle-plugin の
+                checkstyle-advisory execution で <propertyExpansion> により
+                rules/checkstyle/suppressions.xml を渡している。
+    ============================================================================
 -->
 
 <!--

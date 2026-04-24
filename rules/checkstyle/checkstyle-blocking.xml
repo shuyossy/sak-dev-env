@@ -2,28 +2,67 @@
 <!DOCTYPE module PUBLIC
   "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
   "https://checkstyle.org/dtds/configuration_1_3.dtd">
+<!--
+    ============================================================================
+    役割: Checkstyle "hard gate" (違反で commit / build を必ず失敗させる)
+    ============================================================================
+    本ファイルはプロジェクト独自の致命パターン集合である。Checker ルート直下で
+    severity="error" を宣言しており、違反は Checkstyle の CLI でも Maven でも
+    errorCount としてカウントされ、exit code 非ゼロ / build FAILURE になる。
+
+    実行される場所は 2 箇所:
+    1) pre-commit (scripts/run-checkstyle.mjs 経由、lint-staged から呼び出し):
+       変更ファイル (staged diff) を対象に高速に走り、commit をブロックする。
+    2) pre-push / CI (pom.xml の maven-checkstyle-plugin / checkstyle-blocking
+       execution 経由): リポジトリ全体を対象に走り、pre-commit を no-verify で
+       素通りさせた変更や、他所で混入した違反を最後に捕捉する。
+
+    対になる soft gate は同フォルダの rules/checkstyle/checkstyle-advisory.xml
+    (google_checks.xml 逐語コピー、severity="warning" で助言レベル)。
+    役割分担の詳細は rules/README.md 参照。
+
+    収録方針 (追加する際の基準):
+    * 議論の余地がない致命パターンのみ。誤検知が実質ゼロで、修正方法が自明なもの。
+    * 生産性を落とさず、開発者が "書きかけ" の段階で止まりすぎない粒度。
+    * 迷うようなスタイル論点は入れない (それは advisory 側の役目)。
+    * Spotless (google-java-format) が整形で担保している範囲 (インデント・import
+      並び順・WhitespaceAround・行末空白・EOF 改行など) は原則ここに重複させない。
+      google-java-format 通過後のコードに対して blocking が違反を上げると、pre-commit
+      で "Spotless は直したのに Checkstyle で落ちる" デッドロックを生むため。
+      例外は NewlineAtEndOfFile / 行末空白 / Tab の 3 点のみ。これらは Spotless で
+      常に修正されるが、git の hooks バイパスオプション (no-verify) で Spotless を
+      飛ばされた際の最終の保険として pre-push / CI で意味を持つため冗長に残している。
+    ============================================================================
+-->
 <module name="Checker">
   <property name="charset" value="UTF-8"/>
   <property name="severity" value="error"/>
   <property name="fileExtensions" value="java"/>
 
+  <!-- 行末空白: Spotless の trimTrailingWhitespace と重複するが、hooks バイパス (no-verify) 時の保険として残す -->
   <module name="RegexpSingleline">
     <property name="format" value="\s+$"/>
     <property name="message" value="行末に空白があります"/>
   </module>
-  <module name="RegexpSingleline">
-    <property name="format" value="\t"/>
-    <property name="message" value="タブ文字を使用しています（スペース 2 つに変更してください）"/>
+
+  <!-- Tab 文字: Checkstyle ネイティブの FileTabCharacter で検知 (eachLine=true で全行報告) -->
+  <module name="FileTabCharacter">
+    <property name="eachLine" value="true"/>
   </module>
+
+  <!-- EOF 改行: Spotless の endWithNewline と重複するが、hooks バイパス (no-verify) 時の保険として残す -->
+  <module name="NewlineAtEndOfFile"/>
 
   <module name="TreeWalker">
     <module name="UnusedImports"/>
     <module name="RedundantImport"/>
     <module name="AvoidStarImport"/>
-    <module name="EmptyBlock">
-      <property name="option" value="text"/>
-      <property name="tokens" value="LITERAL_CATCH"/>
+
+    <!-- 空 catch: advisory (google_checks) と揃え、意図的 no-op を示す変数名 "expected" は許容 -->
+    <module name="EmptyCatchBlock">
+      <property name="exceptionVariableName" value="expected"/>
     </module>
+
     <module name="MissingOverride"/>
     <module name="EqualsHashCode"/>
     <module name="SimplifyBooleanExpression"/>

@@ -60,3 +60,6 @@ target/lint-tools/
 ### Local env files ###
 .env
 .env.local
+
+### MEMO files ###
+memo.md
