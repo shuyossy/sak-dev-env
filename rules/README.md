@@ -210,6 +210,46 @@ Java 品質担保に関連する主な job（`ci-mr` profile が有効）：
 
 > 社内プライベートネットワーク下で **NVD 直接アクセスができない場合**、OWASP DC は `pom.xml` の `ci-mr` profile にコメントで示した `<nvdApiServerUrl>` / `<nvdDatafeedUrl>` / `<nvdApiKey>` で社内ミラーに切り替えてください（詳細は [ルート README § 社内プライベートネットワーク環境への適用](../README.md#社内プライベートネットワーク環境への適用)）。
 
+### 3.5 レポート出力（`mvn site` / GitLab Pages）
+
+`./mvnw site` を実行すると、Checkstyle / PMD / SpotBugs / JUnit / JaCoCo の HTML レポートを `target/site/` に集約生成する。hard gate で build を落とすのは §3.2〜3.4 の経路の責務であり、`mvn site` はあくまで **チームで状況を俯瞰するためのダッシュボード** という位置付け。そのため reporting 側では違反があってもサイト生成は失敗させない設定（`<pom.xml>` の `<reporting>` セクション参照）にしている。
+
+| レポート               | ファイル               | 内容                                                                   |
+| ---------------------- | ---------------------- | ---------------------------------------------------------------------- |
+| プロジェクト概要       | `index.html`           | プロジェクト情報・依存・プラグイン一覧                                 |
+| Checkstyle（blocking） | `checkstyle.html`      | `checkstyle-blocking.xml`（プロジェクト独自の致命パターン集合）の指摘  |
+| PMD                    | `pmd.html`             | `ruleset.xml`（PMD 7.x 標準 8 カテゴリ）の指摘                         |
+| SpotBugs + FindSecBugs | `spotbugs.html`        | バイトコード解析 + セキュリティ脆弱性（effort=Max / threshold=Low）    |
+| JUnit                  | `surefire-report.html` | `target/surefire-reports/*.xml` のテスト結果サマリ                     |
+| JaCoCo カバレッジ      | `jacoco/index.html`    | 行・分岐カバレッジ（閾値チェックは `ci-mr` profile の `jacoco:check`） |
+| ソース相互参照（JXR）  | `xref/`                | Checkstyle / PMD の指摘行から該当ソースにハイパーリンクで遷移する      |
+
+> **Checkstyle のサイト掲載は blocking ルールセットのみ**です。`maven-checkstyle-plugin` の `checkstyle` report goal は出力ファイル名が固定（`checkstyle.html`）で、複数 reportSet を宣言しても同一ファイルに上書きされるため、advisory（google_checks 全体）と blocking の両方をサイトに 2 ページで並べることは技術的に不可能です。サイトには「絶対に直すべき hard gate 違反」だけを見せ、助言レベルの advisory は従来どおり `./mvnw verify` や CI ログで参照してください（`[WARN]` として出力されます）。
+
+#### 実行方法
+
+```sh
+# フル生成（推奨）。verify で各ツールの XML を生成してから site で集約。
+./mvnw clean verify site
+open target/site/index.html
+```
+
+- **Surefire レポートは `report-only` で既存 XML を読むだけ**のため、`./mvnw site` 単独ではテストサマリが空になる。必ず `verify site`（または `test site`）の形で連結すること。
+- Checkstyle / PMD / SpotBugs の設定は `<build>` 側と `<reporting>` 側で重複宣言して同値にそろえている（乖離していると「CI は通ったのにサイトには違反が出る」混乱を生むため）。ルール改定時は両方を更新する。
+- site ライフサイクルは default ライフサイクルと独立だが、`verify site` と連結した場合は frontend-maven-plugin（Node / npm）も回る。
+
+#### GitLab Pages 公開
+
+main ブランチの CI（`.gitlab/ci/pages.yml`）では、`site:java` ジョブが `./mvnw -Pci-main verify site` を実行し、後続の `pages` ジョブが生成物を `public/reports/` サブパスに合成して Docusaurus サイトと並行公開する。URL の例：
+
+| パス                | 内容                                                    |
+| ------------------- | ------------------------------------------------------- |
+| `/`                 | Docusaurus によるサンプルアプリのドキュメント           |
+| `/reports/`         | Maven site のランディング（`index.html`）               |
+| `/reports/pmd.html` | PMD のレポート（他のレポートも `/reports/<name>.html`） |
+
+MR パイプラインでは `site:java` は走らない（`rules: $CI_COMMIT_BRANCH == "main"`）。MR レビュー時に各ツールの指摘を見るには、引き続き対応する `lint:*` / `test:java` / `coverage:java` ジョブのログと既存の JUnit / JaCoCo / OWASP DC の artifact を参照する。
+
 ---
 
 ## 4. ツール別「見る／見ない」まとめ（俯瞰用）

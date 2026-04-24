@@ -42,6 +42,11 @@
 		<!-- Node/npm のダウンロード元。社内ミラー利用時は -Dnode.download.root=... 等で上書き -->
 		<node.download.root>https://nodejs.org/dist/</node.download.root>
 		<npm.download.root>https://registry.npmjs.org/npm/-/</npm.download.root>
+		<!-- mvn site（品質レポート HTML 集約サイト）用 -->
+		<maven-site-plugin.version>3.12.1</maven-site-plugin.version>
+		<maven-project-info-reports-plugin.version>3.6.2</maven-project-info-reports-plugin.version>
+		<maven-surefire-report-plugin.version>3.2.5</maven-surefire-report-plugin.version>
+		<maven-jxr-plugin.version>3.3.2</maven-jxr-plugin.version>
 	</properties>
 
 	<profiles>
@@ -413,7 +418,172 @@
 					</execution>
 				</executions>
 			</plugin>
+
+			<!--
+				maven-site-plugin: ./mvnw site で Checkstyle / PMD / SpotBugs / JUnit(Surefire) /
+				JaCoCo のレポートを target/site/ に HTML 集約する。Spring Boot parent は site plugin の
+				バージョンを古いままにしているため、3.12.1（site 3.x 系の最新安定）に明示で引き上げる。
+				site plugin 4.x は Velocity テンプレート撤廃等で互換性が壊れているため採用しない。
+			-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-site-plugin</artifactId>
+				<version>${maven-site-plugin.version}</version>
+				<configuration>
+					<locales>ja</locales>
+					<inputEncoding>UTF-8</inputEncoding>
+					<outputEncoding>UTF-8</outputEncoding>
+				</configuration>
+			</plugin>
+
+			<!--
+				maven-jxr-plugin: Checkstyle / PMD が linkXRef=true でソース相互参照を貼るために必要。
+				default lifecycle には何も bind しないが、site 実行時に参照されるため <build> に置く。
+			-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jxr-plugin</artifactId>
+				<version>${maven-jxr-plugin.version}</version>
+			</plugin>
 		</plugins>
 	</build>
+
+	<!--
+		<reporting>: ./mvnw site で生成する HTML レポートの集約。
+		build 側のチェック（fail 条件付き）とは独立に、違反があっても必ずサイトを描画するよう
+		report plugin 側では failOnViolation 相当の設定を入れない。
+		詳細な方針は rules/README.md § "レポート出力 (mvn site)" を参照。
+	-->
+	<reporting>
+		<plugins>
+			<!-- プロジェクト情報（site のランディングとサイドバー構築に必要） -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-project-info-reports-plugin</artifactId>
+				<version>${maven-project-info-reports-plugin.version}</version>
+				<reportSets>
+					<reportSet>
+						<reports>
+							<report>index</report>
+							<report>summary</report>
+							<report>plugins</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
+
+			<!-- ソース相互参照。Checkstyle / PMD の HTML から該当行にリンクするため -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jxr-plugin</artifactId>
+				<version>${maven-jxr-plugin.version}</version>
+			</plugin>
+
+			<!--
+				JUnit テスト結果レポート。
+				report-only goal で target/surefire-reports/*.xml のみを描画する
+				（report goal は test を再実行してしまうため避ける）。
+				そのため ./mvnw site 単独では空になる。必ず verify site か test site で連結する。
+			-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-report-plugin</artifactId>
+				<version>${maven-surefire-report-plugin.version}</version>
+				<reportSets>
+					<reportSet>
+						<reports>
+							<report>report-only</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
+
+			<!--
+				Checkstyle: サイトには blocking（プロジェクト独自の致命パターン）のみを掲載する。
+				maven-checkstyle-plugin の checkstyle report goal は出力ファイル名が固定
+				（checkstyle.html）のため複数 reportSet を宣言しても同一ファイルに上書きされ、
+				技術的に 2 ページ化できない。advisory（google_checks 全体）は verify 段階で
+				build 側の checkstyle-advisory execution が console に出すため、CI ログや
+				ローカル `./mvnw verify` で引き続き参照可能。
+				reporting 側では failOnViolation 的設定は絶対に入れない（違反があっても
+				サイト生成は成功させる必要があるため）。
+			-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<version>3.3.1</version>
+				<configuration>
+					<configLocation>rules/checkstyle/checkstyle-blocking.xml</configLocation>
+					<linkXRef>true</linkXRef>
+				</configuration>
+				<reportSets>
+					<reportSet>
+						<reports>
+							<report>checkstyle</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
+
+			<!-- PMD: build 側と同じ ruleset を参照し乖離を防ぐ -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-pmd-plugin</artifactId>
+				<version>3.22.0</version>
+				<configuration>
+					<rulesets>
+						<ruleset>rules/pmd/ruleset.xml</ruleset>
+					</rulesets>
+					<linkXRef>true</linkXRef>
+					<skipEmptyReport>false</skipEmptyReport>
+				</configuration>
+				<reportSets>
+					<reportSet>
+						<reports>
+							<report>pmd</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
+
+			<!--
+				SpotBugs: build 側と同一 configuration（effort / threshold / excludeFilterFile /
+				FindSecBugs plugin）を重複宣言して挙動をそろえる。verify 済み環境では
+				target/spotbugsXml.xml が存在するため report 生成時に再解析せず XML を再利用する。
+			-->
+			<plugin>
+				<groupId>com.github.spotbugs</groupId>
+				<artifactId>spotbugs-maven-plugin</artifactId>
+				<version>4.8.6.2</version>
+				<configuration>
+					<effort>Max</effort>
+					<threshold>Low</threshold>
+					<xmlOutput>true</xmlOutput>
+					<excludeFilterFile>rules/spotbugs/exclude.xml</excludeFilterFile>
+					<plugins>
+						<plugin>
+							<groupId>com.h3xstream.findsecbugs</groupId>
+							<artifactId>findsecbugs-plugin</artifactId>
+							<version>${find-sec-bugs.version}</version>
+						</plugin>
+					</plugins>
+				</configuration>
+			</plugin>
+
+			<!-- JaCoCo: test 段階で生成される target/site/jacoco/ を site に取り込む -->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>${jacoco.version}</version>
+				<reportSets>
+					<reportSet>
+						<reports>
+							<report>report</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
+		</plugins>
+	</reporting>
 
 </project>

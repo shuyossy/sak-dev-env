@@ -1,6 +1,30 @@
+# Maven site（Checkstyle / PMD / SpotBugs / JUnit / JaCoCo の HTML レポート集約）を生成し、
+# artifact として受け渡して pages ジョブが public/reports/ サブパスに配置する。
+# Pages 公開は main ブランチのみ（Docusaurus と同じゲート）。
+site:java:
+  stage: pages
+  image: $IMAGE_MAVEN
+  needs: ['setup:maven']
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  cache:
+    - <<: *cache_maven
+  # ci-main profile で verify（Checkstyle/PMD/SpotBugs/Surefire が XML を生成）→ そのまま site 生成。
+  # report-only を使う Surefire は既存 XML が必要なため、必ず verify と連結する。
+  script:
+    - ./mvnw $MAVEN_CLI_OPTS -Pci-main verify site
+  artifacts:
+    paths:
+      - target/site
+    expire_in: 1 week
+
+# 既存: Docusaurus の GitLab Pages 公開。site:java の artifact を受け取り public/reports/ に合成。
 pages:
   stage: pages
   image: $IMAGE_NODE
+  needs:
+    - job: site:java
+      artifacts: true
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
   cache:
@@ -13,6 +37,8 @@ pages:
   script:
     - npm run build
     - mv build ../public
+    - mkdir -p ../public/reports
+    - cp -r ../target/site/. ../public/reports/
   artifacts:
     paths:
       - public

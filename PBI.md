@@ -26,7 +26,9 @@
   - [x] Javaの品質担保戦略の標準準拠化（指摘事項対応、2026-04-24）
   - [x] Javaの品質担保戦略の明文化（rules/README.md 作成、指摘事項対応、2026-04-24）
   - [x] Checkstyle 二層構成の非対称性解消（blocking ruleset を pre-push / CI でも再実行、advisory / blocking のファイル名ペア化、指摘事項対応、2026-04-24）
+  - [x] 品質ツール（Checkstyle / PMD / SpotBugs / JUnit / JaCoCo）の `mvn site` レポート出力対応と GitLab Pages への `/reports/` 公開（指摘事項対応、2026-04-24）
 - 注意事項
+- 指摘事項
 
 # ID: 2
 
