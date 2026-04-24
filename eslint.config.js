@@ -47,6 +47,16 @@ export default [
     },
   },
   {
+    // scripts/ 配下は lint-staged から起動される Node スクリプト群。
+    // fileURLToPath 等の Node API と process/console グローバルを使う。
+    files: ['scripts/**/*.{js,mjs,cjs}', '*.config.js', 'commitlint.config.js'],
+    languageOptions: {
+      ecmaVersion: 2024,
+      sourceType: 'module',
+      globals: { ...globals.node },
+    },
+  },
+  {
     files: ['src/main/frontend/**/*.test.js'],
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
   },

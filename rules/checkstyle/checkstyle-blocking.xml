@@ -13,7 +13,7 @@
   </module>
   <module name="RegexpSingleline">
     <property name="format" value="\t"/>
-    <property name="message" value="タブ文字を使用しています（スペース 4 つに変更してください）"/>
+    <property name="message" value="タブ文字を使用しています（スペース 2 つに変更してください）"/>
   </module>
 
   <module name="TreeWalker">

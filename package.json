@@ -19,7 +19,7 @@
     "audit": "npm audit --audit-level=high",
     "lint:java:checkstyle": "node scripts/run-checkstyle.mjs",
     "lint:java:pmd": "node scripts/run-pmd.mjs",
-    "secretlint": "secretlint --secretlintignore .gitignore '**/*'",
+    "secretlint": "secretlint '**/*'",
     "prepare": "husky",
     "postinstall": "node scripts/setup-lint-tools.mjs"
   },

@@ -20,6 +20,10 @@
   "files.eol": "\n",
   "files.insertFinalNewline": true,
   "files.trimTrailingWhitespace": true,
-  "eslint.validate": ["javascript"],
+  "eslint.validate": ["javascript", "javascriptreact"],
+  "eslint.probe": ["javascript", "javascriptreact"],
+  "eslint.options": {
+    "overrideConfigFile": "eslint.config.js"
+  },
   "eslint.workingDirectories": [{ "mode": "auto" }]
 }
