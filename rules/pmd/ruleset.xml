@@ -136,7 +136,16 @@
     </properties>
   </rule>
 
-  <rule ref="category/java/errorprone.xml"/>
+  <rule ref="category/java/errorprone.xml">
+    <!--
+      AvoidCatchingGenericException: 外部システム連携（AI / HTTP / 外部 API）の
+      境界では「あらゆる例外を捕捉してドメイン固有例外に包んで再 throw する」
+      パターンが正しい。catch 対象が `Exception` / `RuntimeException` だと
+      本ルールが構造的に flagging するため、ボイラープレートでは除外する。
+      （swallow せず必ず再 throw する規律は code review で担保する方針。）
+    -->
+    <exclude name="AvoidCatchingGenericException"/>
+  </rule>
   <rule ref="category/java/multithreading.xml"/>
   <rule ref="category/java/performance.xml"/>
   <rule ref="category/java/security.xml"/>

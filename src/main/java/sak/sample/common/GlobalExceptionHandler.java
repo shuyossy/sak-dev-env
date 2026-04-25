@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import sak.sample.itinerary.ai.exception.SuggestFailedException;
 import sak.sample.itinerary.exception.ActivityNotFoundException;
 import sak.sample.itinerary.exception.TripNotFoundException;
 
@@ -52,6 +53,14 @@ public class GlobalExceptionHandler {
       final IllegalArgumentException ex) {
     log.info(ex.getMessage());
     return ResponseEntity.badRequest().body(Map.of(KEY_MESSAGE, ex.getMessage()));
+  }
+
+  @ExceptionHandler(SuggestFailedException.class)
+  public ResponseEntity<Map<String, Object>> handleSuggestFailed(final SuggestFailedException ex) {
+    log.warn("AI suggestion failed", ex);
+    String traceId = MDC.get(KEY_TRACE_ID);
+    return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+        .body(Map.of(KEY_MESSAGE, ex.getMessage(), KEY_TRACE_ID, traceId == null ? "" : traceId));
   }
 
   @ExceptionHandler(Exception.class)
