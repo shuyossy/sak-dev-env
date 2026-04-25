@@ -390,6 +390,24 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-pmd-plugin</artifactId>
 				<version>3.22.0</version>
+				<!--
+					maven-pmd-plugin 3.22.0 はデフォルトで PMD 7.0.0 を同梱するが、
+					pre-commit / CLI 側は ${pmd.version} (= 7.23.0) を使うため、
+					Maven plugin もここで明示的にバージョンを揃える
+					（古い PMD には rule property override の不具合などがあり実害がある）。
+				-->
+				<dependencies>
+					<dependency>
+						<groupId>net.sourceforge.pmd</groupId>
+						<artifactId>pmd-core</artifactId>
+						<version>${pmd.version}</version>
+					</dependency>
+					<dependency>
+						<groupId>net.sourceforge.pmd</groupId>
+						<artifactId>pmd-java</artifactId>
+						<version>${pmd.version}</version>
+					</dependency>
+				</dependencies>
 				<configuration>
 					<rulesets>
 						<ruleset>rules/pmd/ruleset.xml</ruleset>

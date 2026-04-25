@@ -1,4 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FindBugsFilter>
-  <!-- 誤検知の除外をここに追加。ID:2 以降で具体化する想定 -->
+  <!--
+    ボイラープレート向け汎用ルール。
+    適用先プロジェクトのパッケージ命名規約に合わせて Class 正規表現を調整してください。
+  -->
+
+  <!--
+    JPA エンティティ（@Entity 付きクラス）は ORM のため可変 getter/setter を露出する
+    必要があり、EI_EXPOSE_REP / EI_EXPOSE_REP2 は構造的に避けられない。
+    `*.domain.*` または `*.entity.*` パッケージ配下のクラスを対象とする
+    （DDD の domain 命名と JPA 慣例の entity 命名の両方に対応）。
+  -->
+  <Match>
+    <Class name="~.*\.(domain|entity)\..*"/>
+    <Or>
+      <Bug pattern="EI_EXPOSE_REP"/>
+      <Bug pattern="EI_EXPOSE_REP2"/>
+    </Or>
+  </Match>
 </FindBugsFilter>

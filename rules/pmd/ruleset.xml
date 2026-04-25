@@ -33,10 +33,68 @@
 
   <rule ref="category/java/bestpractices.xml"/>
   <rule ref="category/java/codestyle.xml"/>
-  <rule ref="category/java/design.xml"/>
+  <rule ref="category/java/design.xml">
+    <!--
+      UseUtilityClass: Spring Boot の @SpringBootApplication が付与されたエントリ
+      ポイントクラスは「main しかない」構造になりがちで、本ルールが構造的に常に
+      false positive を出す。@SpringBootApplication は Spring が CGLIB プロキシ
+      および @Configuration として扱うため private constructor 化や final 化は
+      推奨されず、また本ボイラープレート方針として個別 @SuppressWarnings は禁止
+      しているため、ルールセット側で除外する。
+    -->
+    <exclude name="UseUtilityClass"/>
+  </rule>
   <rule ref="category/java/documentation.xml"/>
   <rule ref="category/java/errorprone.xml"/>
   <rule ref="category/java/multithreading.xml"/>
   <rule ref="category/java/performance.xml"/>
   <rule ref="category/java/security.xml"/>
+
+  <!--
+    ========================================================================
+    構造的に PMD 標準ルールと衝突する箇所の TOBE 化
+    （rules/README.md §4.5 のフローに沿って判定。
+     複数ファイルで構造的に再発するパターンは、個別 @SuppressWarnings ではなく
+     ここで rule property を緩和する形で吸収する。）
+
+    ※ PMD 7.x ではルール参照に <exclude-pattern> を置けないため、
+       ファイル単位の exclude が必要なときは ruleset 全体への
+       <exclude-pattern> か、rule の <properties> で許容範囲を広げる方法を取る。
+    ========================================================================
+  -->
+
+  <!--
+    AvoidDuplicateLiterals: テストデータでは同一文字列が頻出するのが自然
+    （複数テストで同じ enum 名や定数を使う）。skipAnnotations を有効にし、
+    アノテーションが付与されたフィールド／パラメータの重複文字列を許容する。
+  -->
+  <rule ref="category/java/errorprone.xml/AvoidDuplicateLiterals">
+    <properties>
+      <property name="skipAnnotations" value="true"/>
+    </properties>
+  </rule>
+
+  <!--
+    MethodNamingConventions: テストメソッド名はドメイン語彙や日本語、
+    アンダースコア区切りで「自然言語に近い読みやすさ」を優先することが多い。
+    junit テストパターンを緩和して許容する（本番コードのメソッド名は規約どおり）。
+  -->
+  <rule ref="category/java/codestyle.xml/MethodNamingConventions">
+    <properties>
+      <property name="junit5TestPattern" value="[a-zA-Z_぀-ゟ゠-ヿ一-鿿][a-zA-Z0-9_぀-ゟ゠-ヿ一-鿿]*"/>
+      <property name="junit4TestPattern" value="[a-zA-Z_぀-ゟ゠-ヿ一-鿿][a-zA-Z0-9_぀-ゟ゠-ヿ一-鿿]*"/>
+      <property name="junit3TestPattern" value="[a-zA-Z_぀-ゟ゠-ヿ一-鿿][a-zA-Z0-9_぀-ゟ゠-ヿ一-鿿]*"/>
+    </properties>
+  </rule>
+
+  <!--
+    TooManyMethods: テストクラスは振る舞いごとに 1 メソッド書くため
+    既定の 10 メソッドではすぐに頭打ちになる。30 程度に緩和する。
+    本番コードでも 30 を超えるなら設計の見直しを促せる、ちょうどよい上限。
+  -->
+  <rule ref="category/java/design.xml/TooManyMethods">
+    <properties>
+      <property name="maxmethods" value="30"/>
+    </properties>
+  </rule>
 </ruleset>
