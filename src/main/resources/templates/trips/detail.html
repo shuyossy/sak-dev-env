@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title th:text="${trip.title()} + ' - 旅程詳細'">旅程詳細</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" />
+  </head>
+  <body th:data-trip-id="${trip.id()}">
+    <nav class="navbar navbar-dark bg-dark">
+      <div class="container">
+        <a class="navbar-brand" th:href="@{/trips}">sak-sample 旅程アプリ</a>
+      </div>
+    </nav>
+    <main class="container py-4">
+      <div class="mb-3">
+        <a th:href="@{/trips}" class="text-decoration-none">← 一覧へ戻る</a>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+          <h1 class="h3" th:text="${trip.title()}">タイトル</h1>
+          <p class="mb-0">
+            <span class="text-muted">行き先：</span><span th:text="${trip.destination()}"></span>
+          </p>
+          <p class="mb-0">
+            <span class="text-muted">期間：</span>
+            <span
+              th:text="${trip.startDate()} + ' 〜 ' + ${trip.endDate()}">
+              2026-05-01 〜 2026-05-03
+            </span>
+          </p>
+        </div>
+        <div class="btn-group">
+          <button
+            type="button"
+            class="btn btn-outline-secondary"
+            data-bs-toggle="modal"
+            data-bs-target="#tripEditModal">
+            編集
+          </button>
+          <button type="button" class="btn btn-outline-danger" id="tripDeleteBtn">削除</button>
+        </div>
+      </div>
+
+      <hr />
+
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h4">アクティビティ</h2>
+        <div class="btn-group">
+          <button
+            type="button"
+            class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#activityCreateModal">
+            追加
+          </button>
+          <button
+            type="button"
+            class="btn btn-outline-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#aiSuggestModal">
+            AI 提案
+          </button>
+        </div>
+      </div>
+
+      <table class="table table-sm table-hover">
+        <thead>
+          <tr>
+            <th scope="col">日付</th>
+            <th scope="col">時刻</th>
+            <th scope="col">タイトル</th>
+            <th scope="col">場所</th>
+            <th scope="col">メモ</th>
+            <th scope="col" class="text-end">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="a : ${trip.activities()}" th:data-activity-id="${a.id()}">
+            <td th:text="${a.date()}">2026-05-01</td>
+            <td th:text="${a.time()}">09:00</td>
+            <td th:text="${a.title()}">清水寺</td>
+            <td th:text="${a.location()}">京都市</td>
+            <td th:text="${a.note()}"></td>
+            <td class="text-end">
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-danger js-activity-delete"
+                th:data-activity-id="${a.id()}">
+                削除
+              </button>
+            </td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(trip.activities())}">
+            <td colspan="6" class="text-center text-muted">アクティビティがまだありません</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Trip 編集モーダル -->
+      <div class="modal fade" id="tripEditModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+          <form id="tripEditForm" class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">旅程を編集</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-2">
+                <label class="form-label">タイトル</label>
+                <input
+                  class="form-control"
+                  name="title"
+                  th:value="${trip.title()}"
+                  required
+                  maxlength="100" />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">行き先</label>
+                <input
+                  class="form-control"
+                  name="destination"
+                  th:value="${trip.destination()}"
+                  required
+                  maxlength="100" />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">開始日</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  name="startDate"
+                  th:value="${trip.startDate()}"
+                  required />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">終了日</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  name="endDate"
+                  th:value="${trip.endDate()}"
+                  required />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                キャンセル
+              </button>
+              <button type="submit" class="btn btn-primary">更新</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Activity 追加モーダル -->
+      <div class="modal fade" id="activityCreateModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+          <form id="activityCreateForm" class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">アクティビティを追加</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-2">
+                <label class="form-label">日付</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  name="date"
+                  th:min="${trip.startDate()}"
+                  th:max="${trip.endDate()}"
+                  required />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">時刻</label>
+                <input type="time" class="form-control" name="time" />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">タイトル</label>
+                <input class="form-control" name="title" required maxlength="100" />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">場所</label>
+                <input class="form-control" name="location" maxlength="100" />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">メモ</label>
+                <textarea class="form-control" name="note" maxlength="500"></textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                キャンセル
+              </button>
+              <button type="submit" class="btn btn-primary">追加</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- AI 提案モーダル -->
+      <div class="modal fade" id="aiSuggestModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+          <form id="aiSuggestForm" class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">AI にアクティビティを提案させる</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-2">
+                <label class="form-label">対象日</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  name="date"
+                  th:min="${trip.startDate()}"
+                  th:max="${trip.endDate()}"
+                  required />
+              </div>
+              <p class="text-muted small mb-0">
+                天気を考慮したアクティビティを 1 件提案して登録します
+              </p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                キャンセル
+              </button>
+              <button type="submit" class="btn btn-primary">提案を実行</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{/js/trips-detail.js}"></script>
+  </body>
+</html>
