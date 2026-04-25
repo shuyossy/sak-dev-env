@@ -301,6 +301,53 @@ MR パイプラインでは `site:java` は走らない（`rules: $CI_COMMIT_BRA
 
 ---
 
+## 4.5 ルールセット改定 vs 個別抑制 — 判定基準
+
+新しい違反パターンに遭遇したときは以下のフローで対処する。「とりあえず `@SuppressWarnings` で消す」は禁止。サンプルアプリ実装時に `@SuppressWarnings` を散りばめてしまうと、ボイラープレート適用先のチームが「これが標準的な書き方なのか、抑制してよいのか」を判断できなくなるため。
+
+```mermaid
+flowchart TD
+    A[静的解析違反が検出された] --> B{修正可能か?}
+    B -- "Yes" --> C[コードを修正]
+    B -- "No / 設計上不可避" --> D{同一パターンが<br/>複数ファイルで発生する<br/>構造的衝突か?}
+    D -- "Yes" --> E[ルールセット改定<br/>rules/*.xml にて<br/>exclude / skip / property 緩和を追加]
+    E --> F[rules/README.md の<br/>意思決定ログに追記]
+    D -- "No (単発の例外)" --> G[個別抑制<br/>@SuppressWarnings + 理由コメント必須]
+    G --> H{この理由は他人に<br/>納得してもらえるか?}
+    H -- "No" --> C
+    H -- "Yes" --> I[コミット]
+    F --> I
+```
+
+### ルールセット改定の手段（PMD 7 / SpotBugs 別）
+
+- **PMD 7**：
+  - ルール参照に `<exclude-pattern>` を **置けない**（PMD 7 の XSD 仕様変更）。ファイル単位で除外したい場合は `<ruleset>` 直下の `<exclude-pattern>` を使うか、ルール自体を `<exclude>` で除外する。
+  - 同等効果を **rule property の緩和** で実現できる場合はそちらを優先（特定パッケージ／ファイル名に依存しない汎用設定にしやすい）。例：`MethodNamingConventions` の `junit5TestPattern`、`AvoidDuplicateLiterals` の `skipAnnotations`、`TooManyMethods` の `maxmethods`。
+  - ルール自体を除外する判断は「フレームワークの構造と原理的に衝突する」ものに限定する（例：`UseUtilityClass` × `@SpringBootApplication`）。
+- **SpotBugs**：
+  - `<Match>` 内で `<Class>` 正規表現と `<Bug pattern="...">` を組み合わせ、特定構造（パッケージ命名規約や特定アノテーション付きクラス）にだけ false positive を抑制する。
+  - 命名は **ボイラープレート汎用** にする（特定サンプルアプリのパッケージ名を直書きしない）。例：JPA エンティティの `EI_EXPOSE_REP` 抑制は `~.*\.(domain|entity)\..*` の形で domain / entity 規約両対応にしておく。
+
+### 意思決定ログ
+
+| 日付       | 改定箇所                     | 内容                                                                                         | 理由                                                                                                                                                                                                         |
+| ---------- | ---------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-04-25 | `pom.xml`                    | `maven-pmd-plugin` の PMD ランタイムを `${pmd.version}` (7.23.0) に固定                      | プラグイン同梱の 7.0.0 では rule property override が壊れている。pre-commit 経由の CLI とプラグインで PMD 実装バージョンが揃うことで、検出結果の乖離も防止                                                   |
+| 2026-04-25 | `rules/pmd/ruleset.xml`      | `design.UseUtilityClass` を除外                                                              | `@SpringBootApplication` を付与したエントリポイントクラスは構造的に static main のみとなり常に false positive。Spring の CGLIB / `@Configuration` 制約により private constructor 化や final 化は推奨されない |
+| 2026-04-25 | `rules/pmd/ruleset.xml`      | `errorprone.AvoidDuplicateLiterals` の `skipAnnotations=true`                                | `@Test` 等のアノテーション付きフィールド／パラメータでは同一文字列の重複が自然なコードスタイル                                                                                                               |
+| 2026-04-25 | `rules/pmd/ruleset.xml`      | `codestyle.MethodNamingConventions` の `junit3/4/5TestPattern` を緩和                        | テストメソッドはドメイン語彙や日本語、アンダースコア区切りで読みやすさを優先する慣習が一般的                                                                                                                 |
+| 2026-04-25 | `rules/pmd/ruleset.xml`      | `design.TooManyMethods` の `maxmethods=30`                                                   | テストクラスは振る舞いごとに 1 メソッド書くため既定 10 では頭打ちになる。本番側でも 30 を超えるなら設計の見直しを促せる、ちょうどよい上限                                                                    |
+| 2026-04-25 | `rules/spotbugs/exclude.xml` | `EI_EXPOSE_REP` / `EI_EXPOSE_REP2` を `~.*\.(domain\|entity)\..*` 配下のクラスに限定して除外 | JPA エンティティは ORM のため可変 getter/setter を露出する必要がある。命名は domain / entity 両規約に対応するボイラープレート汎用パターン                                                                    |
+
+### カバレッジ閾値方針
+
+JaCoCo の閾値チェックは **`*.service.*` パッケージ配下のみ**を対象とする。トランザクションスクリプトパターンにおいてビジネスロジックは Service 層に集約されるため、閾値の責務もそこに揃える。Entity / Repository / Controller / DTO はカバレッジ対象（report 生成）には含まれるが、閾値違反では fail させない。閾値：**LINE ≥ 80% / BRANCH ≥ 70%**（Service 層に限定するため、全体平均 60/50 より厳しめに引き上げている）。
+
+実装は `pom.xml` の `ci-mr` profile 配下、`jacoco-maven-plugin` の `<rules>` を参照。
+
+---
+
 ## 5. Suppression（例外抑制）の方法
 
 各ツールとも、**まずは個別のソース注釈で抑制**することを推奨します。ルールセット全体から外すのは最後の手段です。
