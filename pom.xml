@@ -106,19 +106,29 @@
 								<phase>verify</phase>
 								<goals><goal>check</goal></goals>
 								<configuration>
+									<!--
+										カバレッジ閾値は *.service.* パッケージ配下のクラスに限定する。
+										トランザクションスクリプトパターンでビジネスロジックは Service 層に
+										集約されるため、閾値の責務もそこに揃える。Entity / Repository /
+										Controller / DTO はカバレッジ対象（report 生成）には含まれるが、
+										閾値違反では fail させない。詳細は rules/README.md の §4.5 を参照。
+									-->
 									<rules>
 										<rule>
-											<element>BUNDLE</element>
+											<element>CLASS</element>
+											<includes>
+												<include>*.service.*</include>
+											</includes>
 											<limits>
 												<limit>
 													<counter>LINE</counter>
 													<value>COVEREDRATIO</value>
-													<minimum>0.60</minimum>
+													<minimum>0.80</minimum>
 												</limit>
 												<limit>
 													<counter>BRANCH</counter>
 													<value>COVEREDRATIO</value>
-													<minimum>0.50</minimum>
+													<minimum>0.70</minimum>
 												</limit>
 											</limits>
 										</rule>
