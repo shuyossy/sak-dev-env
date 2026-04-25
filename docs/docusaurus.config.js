@@ -10,6 +10,9 @@ export default {
     defaultLocale: 'ja',
     locales: ['ja'],
   },
+  // mermaid 図表（アーキテクチャ / シーケンス）を md 内で直接書けるように
+  markdown: { mermaid: true },
+  themes: ['@docusaurus/theme-mermaid'],
   presets: [
     [
       'classic',
