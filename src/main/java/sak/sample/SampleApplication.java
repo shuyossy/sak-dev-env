@@ -2,10 +2,8 @@ package sak.sample;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 /** 旅程作成サンプルアプリのエントリポイント。 */
-@EnableJpaAuditing
 @SpringBootApplication
 public class SampleApplication {
 

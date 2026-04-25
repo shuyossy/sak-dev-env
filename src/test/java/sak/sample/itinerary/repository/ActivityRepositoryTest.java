@@ -8,11 +8,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
+import sak.sample.common.JpaConfig;
 import sak.sample.itinerary.domain.Activity;
 import sak.sample.itinerary.domain.Trip;
 
 @DataJpaTest
 @AutoConfigureTestDatabase
+@Import(JpaConfig.class)
 class ActivityRepositoryTest {
 
   @Autowired private TripRepository tripRepository;
