@@ -6,16 +6,38 @@
   -->
 
   <!--
-    JPA エンティティ（@Entity 付きクラス）は ORM のため可変 getter/setter を露出する
-    必要があり、EI_EXPOSE_REP / EI_EXPOSE_REP2 は構造的に避けられない。
-    `*.domain.*` または `*.entity.*` パッケージ配下のクラスを対象とする
-    （DDD の domain 命名と JPA 慣例の entity 命名の両方に対応）。
+    EI_EXPOSE_REP / EI_EXPOSE_REP2:
+    - JPA エンティティ（@Entity 付きクラス）は ORM のため可変 getter/setter を露出
+      する必要がある
+    - record ベースの DTO は record の言語仕様上、フィールドのコレクション参照を
+      そのまま返す（compact constructor で List.copyOf() するのは記述ノイズが大きく
+      ボイラープレートのコード量最小化方針と合わない）
+    対象を以下のいずれかのパッケージに絞り込み、ドメイン外でこれらのバグが出たら
+    本物の警告として浮かび上がるようにする：
+    - `*.domain.*` / `*.entity.*` （DDD の domain と JPA 慣例 entity の両規約）
+    - `*.dto.*` （DTO 慣例）
   -->
   <Match>
-    <Class name="~.*\.(domain|entity)\..*"/>
+    <Class name="~.*\.(domain|entity|dto)\..*"/>
     <Or>
       <Bug pattern="EI_EXPOSE_REP"/>
       <Bug pattern="EI_EXPOSE_REP2"/>
     </Or>
+  </Match>
+
+  <!--
+    CRLF_INJECTION_LOGS (FindSecBugs):
+    SLF4J のパラメータ化ログ `log.info("... {}", arg)` で arg が文字列の場合
+    必ず警告を出す（CRLF を含む可能性があるため）。Long / 内部生成 ID 等で
+    structurally CRLF を含み得ない値や、信頼できる内部状態のロギングでは
+    すべて false positive となり、ボイラープレートのモダン実装とも衝突する。
+
+    本ボイラープレートでは「ユーザ入力など外部由来の文字列を生のままログに
+    出さない」という運用面の規律で対応する方針。本ルールはグローバルに無効化し、
+    リスク管理は入力検証 (Bean Validation) と Logback の `%replace` パターンに
+    寄せる。
+  -->
+  <Match>
+    <Bug pattern="CRLF_INJECTION_LOGS"/>
   </Match>
 </FindBugsFilter>

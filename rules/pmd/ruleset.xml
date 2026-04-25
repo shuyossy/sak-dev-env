@@ -31,8 +31,66 @@
     ========================================================================
   -->
 
-  <rule ref="category/java/bestpractices.xml"/>
-  <rule ref="category/java/codestyle.xml"/>
+  <rule ref="category/java/bestpractices.xml">
+    <!--
+      GuardLogStatement: SLF4J のパラメータ化ログ (`log.info("{}", arg)`) は
+      フォーマット文字列の組み立てが LoggerImpl 内部で遅延評価されるため、
+      多くの場合 if (log.isInfoEnabled()) ガードは不要。引数式に副作用や
+      高コスト計算がある場合のみ guard が意味を持つが、本ボイラープレートが
+      推奨するパラメータ化ロギングではほぼ常に false positive。
+    -->
+    <exclude name="GuardLogStatement"/>
+  </rule>
+
+  <rule ref="category/java/codestyle.xml">
+    <!--
+      AtLeastOneConstructor: Lombok の @NoArgsConstructor / @RequiredArgsConstructor
+      が生成するコンストラクタは PMD のソース解析時には存在しないため false positive。
+    -->
+    <exclude name="AtLeastOneConstructor"/>
+    <!--
+      LocalVariableCouldBeFinal / MethodArgumentCouldBeFinal: ローカル変数や
+      引数への final 強制は Java 慣習として強くは推奨されない（特に Lombok
+      生成コンストラクタの引数で大量に出る）。読み手の負荷が増えるだけなので除外。
+    -->
+    <exclude name="LocalVariableCouldBeFinal"/>
+    <exclude name="MethodArgumentCouldBeFinal"/>
+    <!--
+      OnlyOneReturn: 多階層ネストを避けるための early-return パターンと衝突する。
+      可読性のためむしろ early-return を推奨することが多い。
+    -->
+    <exclude name="OnlyOneReturn"/>
+  </rule>
+
+  <rule ref="category/java/codestyle.xml/ShortVariable">
+    <properties>
+      <!--
+        `id`, `ex`, `e`, `a`, `t`, `i` などラムダや catch 内の慣用的に短い識別子を許容。
+        既定 3 文字未満で警告 → 1 文字未満（実質無効）に緩和。
+      -->
+      <property name="minimum" value="1"/>
+    </properties>
+  </rule>
+
+  <rule ref="category/java/codestyle.xml/ShortClassName">
+    <properties>
+      <!--
+        `Trip`, `User`, `Item` 等の業務ドメインで自然な 4 文字名を許容（既定 5 -> 4）。
+      -->
+      <property name="minimum" value="4"/>
+    </properties>
+  </rule>
+
+  <rule ref="category/java/codestyle.xml/LongVariable">
+    <properties>
+      <!--
+        Spring の慣習的な変数名（`activityRepository`, `restTemplateBuilder` 等）は
+        18-25 文字程度になりがち。既定 17 -> 30 に緩和。
+      -->
+      <property name="minimum" value="30"/>
+    </properties>
+  </rule>
+
   <rule ref="category/java/design.xml">
     <!--
       UseUtilityClass: Spring Boot の @SpringBootApplication が付与されたエントリ
@@ -43,8 +101,41 @@
       しているため、ルールセット側で除外する。
     -->
     <exclude name="UseUtilityClass"/>
+    <!--
+      LoosePackageCoupling: <packages> プロパティでプロジェクト固有のレイヤ構造を
+      宣言しないと configerror になる仕様。ボイラープレート時点では具体的な
+      レイヤ規約を強制しない方針で除外。適用先プロジェクトで必要なら復活させ、
+      packages プロパティを設定して有効化する。
+    -->
+    <exclude name="LoosePackageCoupling"/>
   </rule>
-  <rule ref="category/java/documentation.xml"/>
+
+  <rule ref="category/java/documentation.xml">
+    <!--
+      CommentRequired: 既定では public メソッドや field にも JavaDoc を要求するが、
+      DTO / Form / record / Lombok 生成 getter/setter にとっては純粋な記述ノイズ。
+      下記の property 緩和でクラスコメントだけを必須にする方針。
+    -->
+    <exclude name="CommentRequired"/>
+  </rule>
+
+  <rule ref="category/java/documentation.xml/CommentRequired">
+    <properties>
+      <!--
+        クラスコメント (header) のみ Required を維持。
+        フィールド・パブリックメソッド・enum などは Ignored にする。
+        本ボイラープレートは「クラス単位の意図を JavaDoc で残し、内部の細部は
+        命名と型で表現する」方針（PBI #2 のコード量最小化要件にも整合）。
+      -->
+      <property name="classCommentRequirement" value="Required"/>
+      <property name="fieldCommentRequirement" value="Ignored"/>
+      <property name="accessorCommentRequirement" value="Ignored"/>
+      <property name="publicMethodCommentRequirement" value="Ignored"/>
+      <property name="protectedMethodCommentRequirement" value="Ignored"/>
+      <property name="enumCommentRequirement" value="Ignored"/>
+    </properties>
+  </rule>
+
   <rule ref="category/java/errorprone.xml"/>
   <rule ref="category/java/multithreading.xml"/>
   <rule ref="category/java/performance.xml"/>
