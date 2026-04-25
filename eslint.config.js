@@ -36,7 +36,9 @@ export default [
     languageOptions: {
       ecmaVersion: 2024,
       sourceType: 'module',
-      globals: { ...globals.browser },
+      // jQuery / Bootstrap は webjars 経由で global に読み込まれるため、
+      // ES module 内からの `$`（jQuery）参照を no-undef で弾かないよう許可。
+      globals: { ...globals.browser, $: 'readonly', jQuery: 'readonly' },
     },
     rules: {
       'no-console': ['warn', { allow: ['warn', 'error'] }],
