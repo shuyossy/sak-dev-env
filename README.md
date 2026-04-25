@@ -153,13 +153,6 @@ npm run build            # 本番ビルド → docs/build/
 └── <設定ファイル群>         vite.config.js / vitest.config.js / eslint.config.js / .prettierrc.json / commitlint.config.js / .secretlintrc.json / .editorconfig / .nvmrc / .gitignore / .gitattributes
 ```
 
-## 関連ドキュメント
-
-- **設計書**: [`docs/plans/2026-04-22-dev-env-setup-design.md`](docs/plans/2026-04-22-dev-env-setup-design.md)
-- **実装計画書**: [`docs/plans/2026-04-22-dev-env-setup.md`](docs/plans/2026-04-22-dev-env-setup.md)
-- **プロジェクト概要と制約**: [`AGENTS.md`](AGENTS.md)
-- **PBI**: [`PBI.md`](PBI.md)
-
 ## ライセンス
 
 未定。
