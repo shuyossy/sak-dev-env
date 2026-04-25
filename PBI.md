@@ -33,8 +33,27 @@
 # ID: 2
 
 - PBI名: サンプルアプリの作成
-- ステータス: to do
+- ステータス: done
 - 受け入れ基準
-  - 簡単なサンプルアプリが作成されていること
+  - [x] サンプルアプリが作成されていること
+    - [x] お題は旅程作成アプリ（Trip + Activity の CRUD）
+    - [x] ドメインは`sak.sample`
+    - [x] コンテキストパスは`sampleapp`
+    - [x] H2DBのインメモリを利用、Spring Data JPA で操作
+    - [x] Lombokを利用（@Getter / @Setter / @RequiredArgsConstructor / @Slf4j）
+    - [x] トランザクションスクリプトパターンで実装（Service 層に集約）
+    - [x] テスト整備（Java: 21 ケース、JavaScript: 3 ケース）
+    - [x] フロントエンドは jQuery / Bootstrap を webjars 経由で取得
+    - [x] ドキュメント整備（docusaurus 5 章 + intro、mermaid 対応）
+    - [x] SpringAI 導入（OpenAI Compatible、mock プロファイルで実 LLM 不要）
+      - [x] WeatherTool（@Tool）と SuggestedActivity（structured output）を組み合わせ、
+            天気を取得して Activity 提案＋登録する機能を実装
+  - [x] 静的解析ツールのチェック内容が最適化されている
+        （ボイラープレート方針に沿って構造的衝突を rule property / exclude で TOBE 化、
+        意思決定は rules/README.md §4.5 の決定ログに記録）
 - 注意事項
+  - できるだけシンプルに、コード量少なく作成すること
+  - 静的解析を回避するようなアノテーションやコメントをコード内に記載することは禁止
+  - 静的解析チェック内容の最適化については、本ボイラープレートを適用したチームが品質とスピードを両立しながら開発できるように実施すること
+    - 実装中のサンプルアプリに警告がでないようにその場しのぎでチェック内容を変更するのではなく、理想のTOBEを考えた上でチェック内容を最適化すること
 - 指摘事項（in progressの場合のみ）

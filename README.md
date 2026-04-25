@@ -2,6 +2,23 @@
 
 モダンな開発環境のサンプルを提供する Spring Boot + Thymeleaf + Vite ボイラープレート。シフトレフト（セキュリティも含めたソフトウェア品質の担保）を大前提として、ローカルでの pre-commit/pre-push フックと GitLab CI/CD パイプラインで、バグや脆弱性をリモートに持ち込まない・デプロイさせない仕組みを提供する。
 
+## サンプルアプリ（旅程作成アプリ）
+
+`src/main/java/sak/sample/` 配下に、ボイラープレートが想定する開発スタイル（CRUD + Spring AI + Thymeleaf + jQuery/Bootstrap on webjars）の参考実装を含む。コンテキストパスは `/sampleapp`、H2 インメモリ DB を使用。
+
+```bash
+# mock プロファイル（実 LLM 接続なし）で起動 → http://localhost:8080/sampleapp/trips
+./mvnw spring-boot:run -Dspring-boot.run.profiles=mock
+
+# 実 LLM 接続（OpenAI 互換 API）
+SPRING_AI_OPENAI_API_KEY=... \
+SPRING_AI_OPENAI_BASE_URL=https://api.openai.com \
+SPRING_AI_OPENAI_MODEL=gpt-4o-mini \
+  ./mvnw spring-boot:run
+```
+
+ドキュメントは `docs/docs/` 配下（docusaurus）。`cd docs && npm start` でローカル参照、または GitLab Pages にデプロイされたものを参照。
+
 ## 前提環境
 
 以下を開発者マシンにインストール済みであること：
