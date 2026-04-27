@@ -127,12 +127,12 @@
         本ボイラープレートは「クラス単位の意図を JavaDoc で残し、内部の細部は
         命名と型で表現する」方針（PBI #2 のコード量最小化要件にも整合）。
       -->
-      <property name="classCommentRequirement" value="Required"/>
-      <property name="fieldCommentRequirement" value="Ignored"/>
-      <property name="accessorCommentRequirement" value="Ignored"/>
-      <property name="publicMethodCommentRequirement" value="Ignored"/>
-      <property name="protectedMethodCommentRequirement" value="Ignored"/>
-      <property name="enumCommentRequirement" value="Ignored"/>
+      <property name="classCommentRequirement" value="required"/>
+      <property name="fieldCommentRequirement" value="ignored"/>
+      <property name="accessorCommentRequirement" value="ignored"/>
+      <property name="publicMethodCommentRequirement" value="ignored"/>
+      <property name="protectedMethodCommentRequirement" value="ignored"/>
+      <property name="enumCommentRequirement" value="ignored"/>
     </properties>
   </rule>
 

@@ -18,7 +18,8 @@
           type="button"
           class="btn btn-primary"
           data-bs-toggle="modal"
-          data-bs-target="#tripCreateModal">
+          data-bs-target="#tripCreateModal"
+        >
           新規作成
         </button>
       </div>
@@ -35,11 +36,11 @@
           <tr
             th:each="trip : ${trips}"
             th:onclick="|location.href='@{/trips/{id}(id=${trip.id()})}'|"
-            style="cursor: pointer">
+            style="cursor: pointer"
+          >
             <td th:text="${trip.title()}">タイトル</td>
             <td th:text="${trip.destination()}">行き先</td>
-            <td
-              th:text="${trip.startDate()} + ' 〜 ' + ${trip.endDate()}">
+            <td th:text="${trip.startDate()} + ' 〜 ' + ${trip.endDate()}">
               2026-05-01 〜 2026-05-03
             </td>
           </tr>
@@ -59,7 +60,8 @@
                 type="button"
                 class="btn-close"
                 data-bs-dismiss="modal"
-                aria-label="閉じる"></button>
+                aria-label="閉じる"
+              ></button>
             </div>
             <div class="modal-body">
               <div class="mb-2">

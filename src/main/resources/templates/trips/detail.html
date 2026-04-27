@@ -24,8 +24,7 @@
           </p>
           <p class="mb-0">
             <span class="text-muted">期間：</span>
-            <span
-              th:text="${trip.startDate()} + ' 〜 ' + ${trip.endDate()}">
+            <span th:text="${trip.startDate()} + ' 〜 ' + ${trip.endDate()}">
               2026-05-01 〜 2026-05-03
             </span>
           </p>
@@ -35,7 +34,8 @@
             type="button"
             class="btn btn-outline-secondary"
             data-bs-toggle="modal"
-            data-bs-target="#tripEditModal">
+            data-bs-target="#tripEditModal"
+          >
             編集
           </button>
           <button type="button" class="btn btn-outline-danger" id="tripDeleteBtn">削除</button>
@@ -51,14 +51,16 @@
             type="button"
             class="btn btn-primary"
             data-bs-toggle="modal"
-            data-bs-target="#activityCreateModal">
+            data-bs-target="#activityCreateModal"
+          >
             追加
           </button>
           <button
             type="button"
             class="btn btn-outline-primary"
             data-bs-toggle="modal"
-            data-bs-target="#aiSuggestModal">
+            data-bs-target="#aiSuggestModal"
+          >
             AI 提案
           </button>
         </div>
@@ -86,7 +88,8 @@
               <button
                 type="button"
                 class="btn btn-sm btn-outline-danger js-activity-delete"
-                th:data-activity-id="${a.id()}">
+                th:data-activity-id="${a.id()}"
+              >
                 削除
               </button>
             </td>
@@ -113,7 +116,8 @@
                   name="title"
                   th:value="${trip.title()}"
                   required
-                  maxlength="100" />
+                  maxlength="100"
+                />
               </div>
               <div class="mb-2">
                 <label class="form-label">行き先</label>
@@ -122,7 +126,8 @@
                   name="destination"
                   th:value="${trip.destination()}"
                   required
-                  maxlength="100" />
+                  maxlength="100"
+                />
               </div>
               <div class="mb-2">
                 <label class="form-label">開始日</label>
@@ -131,7 +136,8 @@
                   class="form-control"
                   name="startDate"
                   th:value="${trip.startDate()}"
-                  required />
+                  required
+                />
               </div>
               <div class="mb-2">
                 <label class="form-label">終了日</label>
@@ -140,7 +146,8 @@
                   class="form-control"
                   name="endDate"
                   th:value="${trip.endDate()}"
-                  required />
+                  required
+                />
               </div>
             </div>
             <div class="modal-footer">
@@ -170,7 +177,8 @@
                   name="date"
                   th:min="${trip.startDate()}"
                   th:max="${trip.endDate()}"
-                  required />
+                  required
+                />
               </div>
               <div class="mb-2">
                 <label class="form-label">時刻</label>
@@ -216,7 +224,8 @@
                   name="date"
                   th:min="${trip.startDate()}"
                   th:max="${trip.endDate()}"
-                  required />
+                  required
+                />
               </div>
               <p class="text-muted small mb-0">
                 天気を考慮したアクティビティを 1 件提案して登録します

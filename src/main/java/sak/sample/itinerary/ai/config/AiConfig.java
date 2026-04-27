@@ -23,8 +23,9 @@ public class AiConfig {
     log.info("ChatModel: mock スタブを使用");
     final String json =
         """
-{"date":"2026-05-02","time":"10:00","title":"金閣寺見学","location":"京都市","note":"曇りでも屋外散策可","weatherSummary":"曇り"}
-""";
+        {"date":"2026-05-02","time":"10:00","title":"金閣寺見学",\
+        "location":"京都市","note":"曇りでも屋外散策可","weatherSummary":"曇り"}
+        """;
     return prompt -> {
       Generation generation = new Generation(new AssistantMessage(json));
       return new ChatResponse(java.util.List.of(generation));

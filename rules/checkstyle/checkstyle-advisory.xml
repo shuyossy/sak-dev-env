@@ -351,6 +351,13 @@
     <module name="SummaryJavadoc">
       <property name="forbiddenSummaryFragments"
                value="^@return the *|^This method returns |^A [{]@code [a-zA-Z0-9]+[}]( is a )"/>
+      <!--
+        本ボイラープレートのコメント・Javadoc は日本語で記述するのがプロジェクトルール
+        （AGENTS.md）。google_checks の既定 period="."（英文ピリオド）では日本語句点
+        終端の summary が構造的に常に WARN になる。`period` は単一文字列比較のため、
+        当ボイラープレートの方針に沿って日本語句点を採用する（決定ログ §4.5 参照）。
+      -->
+      <property name="period" value="。"/>
     </module>
     <module name="JavadocParagraph"/>
     <module name="RequireEmptyLineBeforeBlockTagGroup"/>
@@ -367,7 +374,17 @@
       <property name="tokens" value="METHOD_DEF, CTOR_DEF, ANNOTATION_FIELD_DEF, COMPACT_CTOR_DEF"/>
     </module>
     <module name="MissingJavadocMethod">
-      <property name="scope" value="public"/>
+      <!--
+        public method への Javadoc 強制は PMD `documentation.CommentRequired`
+        （`publicMethodCommentRequirement=ignored` / `protectedMethodCommentRequirement=ignored`）
+        と同方針に揃え、`nothing` を指定して実質オフにする。
+        Checkstyle の `scope` プロパティは Scope enum 値で、`nothing` は最も狭い
+        スコープ。判定が常に false になるため named methods は全て対象外。
+        「クラス単位の意図を JavaDoc で残し、内部の細部は命名と型で表現する」
+        本ボイラープレートの方針との構造的衝突を解消（決定ログ §4.5 参照）。
+        書きたい人が書いた場合の整合（`SummaryJavadoc` / `JavadocMethod` 等）は引き続き効く。
+      -->
+      <property name="scope" value="nothing"/>
       <property name="minLineCount" value="2"/>
       <property name="allowedAnnotations" value="Override, Test"/>
       <property name="tokens" value="METHOD_DEF, CTOR_DEF, ANNOTATION_FIELD_DEF,
